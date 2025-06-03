@@ -8,6 +8,7 @@ import URLCard from '@/components/URLCard'
 import useSWR from 'swr'
 import { URLWithPost } from '../api/urls/route'
 import { UserWithStats } from '../api/users/[username]/route'
+import Link from 'next/link'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -81,19 +82,28 @@ export default function BucketPage({ params }: BucketPageProps) {
       <main className="container mx-auto px-4 py-8">
         {/* Bucket Stats */}
         <div className="mb-8 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center gap-4 mb-4">
-            <div 
-              className="w-12 h-12 rounded-full"
-              style={gradientStyle}
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {user.title || user.username}
-              </h1>
-              {user.description && (
-                <p className="text-gray-600">{user.description}</p>
-              )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div 
+                className="w-12 h-12 rounded-full"
+                style={gradientStyle}
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user.title || user.username}
+                </h1>
+                {user.description && (
+                  <p className="text-gray-600">{user.description}</p>
+                )}
+              </div>
             </div>
+            
+            <Link
+              href={`/${slug}/edit`}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Edit Bucket
+            </Link>
           </div>
           
           <div className="flex gap-6 text-sm text-gray-600">
@@ -108,29 +118,31 @@ export default function BucketPage({ params }: BucketPageProps) {
           <MasonryGrid>
             {urls.map((urlData) => (
               <MasonryItem key={`${urlData.post.id}-${urlData.id}`}>
-                <URLCard
-                  url={{
-                    id: urlData.id,
-                    url: urlData.url,
-                    title: urlData.title,
-                    description: urlData.description,
-                    domain: urlData.domain,
-                    saves: urlData.saves,
-                    clicks: urlData.clicks
-                  }}
-                  owner={{
-                    id: urlData.post.owner.id,
-                    username: urlData.post.owner.username,
-                    title: urlData.post.owner.title,
-                    color1: urlData.post.owner.color1,
-                    color2: urlData.post.owner.color2
-                  }}
-                  post={{
-                    id: urlData.post.id,
-                    title: urlData.post.title
-                  }}
-                  showOwner={false}
-                />
+                <Link href={`/${slug}/${urlData.post.id}`} className="block">
+                  <URLCard
+                    url={{
+                      id: urlData.id,
+                      url: urlData.url,
+                      title: urlData.title,
+                      description: urlData.description,
+                      domain: urlData.domain,
+                      saves: urlData.saves,
+                      clicks: urlData.clicks
+                    }}
+                    owner={{
+                      id: urlData.post.owner.id,
+                      username: urlData.post.owner.username,
+                      title: urlData.post.owner.title,
+                      color1: urlData.post.owner.color1,
+                      color2: urlData.post.owner.color2
+                    }}
+                    post={{
+                      id: urlData.post.id,
+                      title: urlData.post.title
+                    }}
+                    showOwner={false}
+                  />
+                </Link>
               </MasonryItem>
             ))}
           </MasonryGrid>

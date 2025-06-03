@@ -123,8 +123,6 @@ async function handleCreate(body: IngestRequest): Promise<NextResponse<IngestRes
 async function handleEdit(body: IngestRequest): Promise<NextResponse<IngestResponse>> {
   if (body.editing!.type === 'user') {
     // Edit user/bucket profile
-    const parsed = parsePrompt(body.rawText)
-    
     const user = await prisma.user.findUnique({
       where: { username: body.slug }
     })
@@ -136,12 +134,21 @@ async function handleEdit(body: IngestRequest): Promise<NextResponse<IngestRespo
       )
     }
 
+    // For user profiles, parse title and description differently
+    const lines = body.rawText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+
+    const title = lines.length > 0 ? lines[0] : null
+    const description = lines.length > 1 ? lines[1] : null
+
     // Update user profile fields
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        title: parsed.title || null,
-        description: parsed.urls.length > 0 ? parsed.urls[0] : null // Use first URL as description if provided
+        title: title || null,
+        description: description || null
       }
     })
 
