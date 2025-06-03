@@ -1,67 +1,134 @@
+'use client'
+
+import React from 'react'
 import { notFound } from 'next/navigation'
 import Header from '@/components/Header'
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
 import URLCard from '@/components/URLCard'
-import { getURLsForBucket, mockUsers } from '@/lib/mockData'
+import useSWR from 'swr'
+import { URLWithPost } from '../api/urls/route'
+import { UserWithStats } from '../api/users/[username]/route'
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface BucketPageProps {
   params: Promise<{ slug: string }>
 }
 
-export default async function BucketPage({ params }: BucketPageProps) {
-  const { slug } = await params
+export default function BucketPage({ params }: BucketPageProps) {
+  const { slug } = React.use(params)
   
-  // Find the bucket owner
-  const bucketOwner = mockUsers.find(user => user.username === slug)
-  
-  if (!bucketOwner) {
+  const { data: user, error: userError } = useSWR<UserWithStats>(`/api/users/${slug}`, fetcher)
+  const { data: urls, error: urlsError, isLoading } = useSWR<URLWithPost[]>(`/api/urls?bucket=${slug}`, fetcher)
+
+  // Handle user not found
+  if (userError && userError.status === 404) {
     notFound()
   }
 
-  // Get URLs for this bucket
-  const bucketURLs = getURLsForBucket(slug)
+  if (userError || urlsError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Error loading content</h1>
+            <p className="text-gray-600">Please try refreshing the page.</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
+            <div className="animate-pulse">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg h-48 shadow-sm"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  const gradientStyle = {
+    background: `linear-gradient(135deg, ${user.color1}, ${user.color2})`
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentBucket={bucketOwner} />
+      <Header 
+        currentBucket={{
+          id: user.id,
+          username: user.username,
+          title: user.title,
+          description: user.description,
+          color1: user.color1,
+          color2: user.color2,
+          type: user.type || 'user'
+        }} 
+      />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Bucket stats */}
-        <div className="mb-8">
+      <main className="container mx-auto px-4 py-8">
+        {/* Bucket Stats */}
+        <div className="mb-8 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center gap-4 mb-4">
             <div 
               className="w-12 h-12 rounded-full"
-              style={{
-                background: `linear-gradient(135deg, ${bucketOwner.color1}, ${bucketOwner.color2})`
-              }}
+              style={gradientStyle}
             />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {bucketOwner.title || bucketOwner.username}
+              <h1 className="text-2xl font-bold text-gray-900">
+                {user.title || user.username}
               </h1>
-              {bucketOwner.description && (
-                <p className="text-gray-600 mt-1">
-                  {bucketOwner.description}
-                </p>
+              {user.description && (
+                <p className="text-gray-600">{user.description}</p>
               )}
             </div>
           </div>
           
           <div className="flex gap-6 text-sm text-gray-600">
-            <span>{bucketURLs.length} URLs</span>
-            <span>{new Set(bucketURLs.map(item => item.url.domain)).size} domains</span>
+            <span><strong>{user.stats.totalURLs}</strong> URLs</span>
+            <span><strong>{user.stats.uniqueDomains}</strong> domains</span>
+            <span><strong>{user.stats.totalPosts}</strong> posts</span>
           </div>
         </div>
 
-        {/* URL Grid */}
-        {bucketURLs.length > 0 ? (
+        {/* URLs Grid */}
+        {urls && urls.length > 0 ? (
           <MasonryGrid>
-            {bucketURLs.map(({ url, post }, index) => (
-              <MasonryItem key={`${url.id}-${post.id}-${index}`}>
-                <URLCard 
-                  url={url}
-                  owner={bucketOwner}
-                  post={post}
+            {urls.map((urlData) => (
+              <MasonryItem key={`${urlData.post.id}-${urlData.id}`}>
+                <URLCard
+                  url={{
+                    id: urlData.id,
+                    url: urlData.url,
+                    title: urlData.title,
+                    description: urlData.description,
+                    domain: urlData.domain,
+                    saves: urlData.saves,
+                    clicks: urlData.clicks
+                  }}
+                  owner={{
+                    id: urlData.post.owner.id,
+                    username: urlData.post.owner.username,
+                    title: urlData.post.owner.title,
+                    color1: urlData.post.owner.color1,
+                    color2: urlData.post.owner.color2
+                  }}
+                  post={{
+                    id: urlData.post.id,
+                    title: urlData.post.title
+                  }}
                   showOwner={false}
                 />
               </MasonryItem>
@@ -69,22 +136,15 @@ export default async function BucketPage({ params }: BucketPageProps) {
           </MasonryGrid>
         ) : (
           <div className="text-center py-12">
-            <div className="text-gray-400 text-lg mb-2">No URLs yet</div>
-            <p className="text-gray-600">
-              This bucket is empty. Start by adding some URLs.
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              This bucket is empty
+            </h2>
+            <p className="text-gray-500">
+              No URLs have been added to this bucket yet.
             </p>
           </div>
         )}
       </main>
     </div>
   )
-}
-
-// Generate static params for known buckets (optional, for better performance)
-export async function generateStaticParams() {
-  return mockUsers
-    .filter(user => user.type !== 'system')
-    .map(user => ({
-      slug: user.username
-    }))
 } 

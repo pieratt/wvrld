@@ -3,43 +3,35 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create system user (User 1)
-  const systemUser = await prisma.user.upsert({
-    where: { username: 'system' },
-    update: {},
-    create: {
-      username: 'system',
-      title: 'System',
-      type: 'system',
-      color1: '#000000',
-      color2: '#ffffff',
-    },
-  })
+  console.log('🌱 Seeding database...')
 
-  // Create Anonymous user (User 2) for front-page posts
-  const anonymousUser = await prisma.user.upsert({
+  // Create system user (Anonymous - userId 2 as specified in plan)
+  const anonymous = await prisma.user.upsert({
     where: { username: 'anonymous' },
     update: {},
     create: {
+      id: 2,
       username: 'anonymous',
       title: 'Anonymous',
-      description: 'Front page community posts',
-      color1: '#6366f1',
-      color2: '#8b5cf6',
-    },
+      description: 'Community shared links',
+      color1: '#6366F1',
+      color2: '#8B5CF6',
+      type: 'system'
+    }
   })
 
-  // Create sample user buckets
+  // Create sample users
   const alice = await prisma.user.upsert({
     where: { username: 'alice' },
     update: {},
     create: {
       username: 'alice',
-      title: 'Alice\'s Collection',
-      description: 'Curated links and discoveries',
-      color1: '#ef4444',
-      color2: '#f97316',
-    },
+      title: 'Alice\'s Design Resources',
+      description: 'Curated design tools and inspiration',
+      color1: '#F59E0B',
+      color2: '#EF4444',
+      type: 'user'
+    }
   })
 
   const bob = await prisma.user.upsert({
@@ -47,185 +39,145 @@ async function main() {
     update: {},
     create: {
       username: 'bob',
-      title: 'Bob\'s Tech Stack',
+      title: 'Bob\'s Dev Stack',
       description: 'Development tools and resources',
-      color1: '#10b981',
-      color2: '#06b6d4',
-    },
+      color1: '#10B981',
+      color2: '#3B82F6',
+      type: 'user'
+    }
   })
 
-  // Create sample URLs
-  const urls = await Promise.all([
-    prisma.uRL.upsert({
-      where: { url: 'https://github.com/vercel/next.js' },
-      update: {},
-      create: {
-        url: 'https://github.com/vercel/next.js',
-        domain: 'github.com',
-        title: 'Next.js - The React Framework',
-        description: 'The React Framework for the Web',
-      },
-    }),
-    prisma.uRL.upsert({
-      where: { url: 'https://tailwindcss.com' },
-      update: {},
-      create: {
-        url: 'https://tailwindcss.com',
-        domain: 'tailwindcss.com',
-        title: 'Tailwind CSS',
-        description: 'A utility-first CSS framework',
-      },
-    }),
-    prisma.uRL.upsert({
-      where: { url: 'https://www.prisma.io' },
-      update: {},
-      create: {
-        url: 'https://www.prisma.io',
-        domain: 'prisma.io',
-        title: 'Prisma',
-        description: 'Next-generation Node.js and TypeScript ORM',
-      },
-    }),
-    prisma.uRL.upsert({
-      where: { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-      update: {},
-      create: {
-        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        domain: 'youtube.com',
-        title: 'Rick Astley - Never Gonna Give You Up',
-        description: 'The official video for Rick Astley',
-      },
-    }),
-    prisma.uRL.upsert({
-      where: { url: 'https://example.com/article' },
-      update: {},
-      create: {
-        url: 'https://example.com/article',
-        domain: 'example.com',
-        title: 'Sample Article',
-        description: 'A sample article for testing',
-      },
-    }),
-    prisma.uRL.upsert({
-      where: { url: 'https://news.ycombinator.com' },
-      update: {},
-      create: {
-        url: 'https://news.ycombinator.com',
-        domain: 'news.ycombinator.com',
-        title: 'Hacker News',
-        description: 'Social news website focusing on computer science',
-      },
-    }),
-  ])
-
-  // Create sample prompts and posts
-  const prompt1 = await prisma.prompt.create({
-    data: {
-      rawText: 'My favorite development tools\nhttps://github.com/vercel/next.js\nhttps://tailwindcss.com\nhttps://www.prisma.io',
-      userId: bob.id,
-    },
+  const charlie = await prisma.user.upsert({
+    where: { username: 'charlie' },
+    update: {},
+    create: {
+      username: 'charlie',
+      title: 'Charlie\'s Music Collection',
+      description: 'Discovering new sounds',
+      color1: '#8B5CF6',
+      color2: '#EC4899',
+      type: 'user'
+    }
   })
 
-  const post1 = await prisma.post.create({
-    data: {
-      title: 'My favorite development tools',
-      ownerId: bob.id,
-      promptId: prompt1.id,
+  // Create sample posts with URLs
+  const posts = [
+    {
+      user: alice,
+      title: 'Essential Design Tools',
+      urls: [
+        'https://figma.com',
+        'https://dribbble.com',
+        'https://behance.net'
+      ]
     },
-  })
+    {
+      user: alice,
+      title: null, // URLs-only post
+      urls: [
+        'https://coolors.co',
+        'https://unsplash.com'
+      ]
+    },
+    {
+      user: bob,
+      title: 'My Development Setup',
+      urls: [
+        'https://github.com',
+        'https://stackoverflow.com',
+        'https://vercel.com'
+      ]
+    },
+    {
+      user: bob,
+      title: 'Learning Resources',
+      urls: [
+        'https://developer.mozilla.org',
+        'https://typescript.org'
+      ]
+    },
+    {
+      user: charlie,
+      title: 'Current Playlist',
+      urls: [
+        'https://spotify.com',
+        'https://bandcamp.com',
+        'https://soundcloud.com'
+      ]
+    },
+    {
+      user: anonymous,
+      title: 'Community Favorites',
+      urls: [
+        'https://reddit.com',
+        'https://hackernews.com',
+        'https://producthunt.com'
+      ]
+    }
+  ]
 
-  // Link URLs to post1
-  await Promise.all([
-    prisma.postURL.create({
+  for (const postData of posts) {
+    // Create prompt
+    const rawText = postData.title 
+      ? `${postData.title}\n${postData.urls.join('\n')}`
+      : postData.urls.join('\n')
+
+    const prompt = await prisma.prompt.create({
       data: {
-        postId: post1.id,
-        urlId: urls[0].id, // Next.js
-        order: 1,
-      },
-    }),
-    prisma.postURL.create({
+        rawText,
+        userId: postData.user.id
+      }
+    })
+
+    // Create post
+    const post = await prisma.post.create({
       data: {
-        postId: post1.id,
-        urlId: urls[1].id, // Tailwind
-        order: 2,
-      },
-    }),
-    prisma.postURL.create({
-      data: {
-        postId: post1.id,
-        urlId: urls[2].id, // Prisma
-        order: 3,
-      },
-    }),
-  ])
+        ownerId: postData.user.id,
+        promptId: prompt.id,
+        title: postData.title
+      }
+    })
 
-  const prompt2 = await prisma.prompt.create({
-    data: {
-      rawText: 'Random interesting links\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ\nhttps://example.com/article',
-      userId: alice.id,
-    },
-  })
+    // Create URLs and relationships
+    for (let i = 0; i < postData.urls.length; i++) {
+      const urlString = postData.urls[i]
+      
+      // Extract domain
+      const domain = new URL(urlString).hostname
 
-  const post2 = await prisma.post.create({
-    data: {
-      title: 'Random interesting links',
-      ownerId: alice.id,
-      promptId: prompt2.id,
-    },
-  })
+      // Upsert URL
+      const url = await prisma.uRL.upsert({
+        where: { url: urlString },
+        update: {},
+        create: {
+          url: urlString,
+          domain,
+          title: `${domain.charAt(0).toUpperCase() + domain.slice(1)} - Great Resource`,
+          description: `Discover amazing content on ${domain}`,
+          metadataStatus: 'SUCCESS'
+        }
+      })
 
-  // Link URLs to post2
-  await Promise.all([
-    prisma.postURL.create({
-      data: {
-        postId: post2.id,
-        urlId: urls[3].id, // YouTube
-        order: 1,
-      },
-    }),
-    prisma.postURL.create({
-      data: {
-        postId: post2.id,
-        urlId: urls[4].id, // Example article
-        order: 2,
-      },
-    }),
-  ])
-
-  // Create an anonymous front-page post
-  const prompt3 = await prisma.prompt.create({
-    data: {
-      rawText: 'https://news.ycombinator.com',
-      userId: anonymousUser.id,
-    },
-  })
-
-  const post3 = await prisma.post.create({
-    data: {
-      ownerId: anonymousUser.id,
-      promptId: prompt3.id,
-    },
-  })
-
-  await prisma.postURL.create({
-    data: {
-      postId: post3.id,
-      urlId: urls[5].id, // Hacker News
-      order: 1,
-    },
-  })
+      // Create PostURL relationship
+      await prisma.postURL.create({
+        data: {
+          postId: post.id,
+          urlId: url.id,
+          order: i
+        }
+      })
+    }
+  }
 
   console.log('✅ Database seeded successfully!')
-  console.log(`Created users: ${systemUser.username}, ${anonymousUser.username}, ${alice.username}, ${bob.username}`)
-  console.log(`Created ${urls.length} URLs and 3 posts`)
+  console.log(`Created ${posts.length} posts across 4 users`)
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e)
     process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
   }) 

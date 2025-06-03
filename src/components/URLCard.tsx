@@ -1,12 +1,34 @@
 'use client'
 
 import Link from 'next/link'
-import { MockURL, MockUser, MockPost } from '@/lib/mockData'
+
+interface URLData {
+  id: number
+  url: string
+  title: string | null
+  description: string | null
+  domain: string | null
+  saves: number
+  clicks: number
+}
+
+interface OwnerData {
+  id: number
+  username: string
+  title: string | null
+  color1: string
+  color2: string
+}
+
+interface PostData {
+  id: number
+  title: string | null
+}
 
 interface URLCardProps {
-  url: MockURL
-  owner: MockUser
-  post: MockPost
+  url: URLData
+  owner: OwnerData
+  post: PostData
   showOwner?: boolean
 }
 

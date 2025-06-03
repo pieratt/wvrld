@@ -1,47 +1,102 @@
+'use client'
+
 import Header from '@/components/Header'
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
 import URLCard from '@/components/URLCard'
-import { getAllURLs, mockUsers } from '@/lib/mockData'
+import useSWR from 'swr'
+import { URLWithPost } from './api/urls/route'
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function HomePage() {
-  const allURLs = getAllURLs()
-  const anonymousUser = mockUsers.find(u => u.username === 'anonymous')
+  const { data: urls, error, isLoading } = useSWR<URLWithPost[]>('/api/urls', fetcher)
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Error loading content</h1>
+            <p className="text-gray-600">Please try refreshing the page.</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
+            <div className="animate-pulse">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg h-48 shadow-sm"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentBucket={anonymousUser} />
+      <Header />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Front Feed
-          </h2>
-          <p className="text-gray-600">
-            All URLs from every bucket, grouped by domain and colored by bucket
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            WVRLD Front Feed
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover curated links and collections from the community. 
+            Each URL is colored by its bucket owner.
           </p>
         </div>
 
-        {/* URL Grid */}
-        <MasonryGrid>
-          {allURLs.map(({ url, post, owner }, index) => (
-            <MasonryItem key={`${url.id}-${post.id}-${index}`}>
-              <URLCard 
-                url={url}
-                owner={owner}
-                post={post}
-                showOwner={true}
-              />
-            </MasonryItem>
-          ))}
-        </MasonryGrid>
-
-        {/* Empty state */}
-        {allURLs.length === 0 && (
+        {urls && urls.length > 0 ? (
+          <MasonryGrid>
+            {urls.map((urlData) => (
+              <MasonryItem key={`${urlData.post.id}-${urlData.id}`}>
+                <URLCard
+                  url={{
+                    id: urlData.id,
+                    url: urlData.url,
+                    title: urlData.title,
+                    description: urlData.description,
+                    domain: urlData.domain,
+                    saves: urlData.saves,
+                    clicks: urlData.clicks
+                  }}
+                  owner={{
+                    id: urlData.post.owner.id,
+                    username: urlData.post.owner.username,
+                    title: urlData.post.owner.title,
+                    color1: urlData.post.owner.color1,
+                    color2: urlData.post.owner.color2
+                  }}
+                  post={{
+                    id: urlData.post.id,
+                    title: urlData.post.title
+                  }}
+                  showOwner={true}
+                />
+              </MasonryItem>
+            ))}
+          </MasonryGrid>
+        ) : (
           <div className="text-center py-12">
-            <div className="text-gray-400 text-lg mb-2">No URLs yet</div>
-            <p className="text-gray-600">
-              Start by adding some URLs to create your first post
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              No URLs yet
+            </h2>
+            <p className="text-gray-500">
+              Be the first to share something interesting!
             </p>
           </div>
         )}
