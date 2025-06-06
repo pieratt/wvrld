@@ -1,11 +1,26 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, MetadataStatus } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 async function main() {
   console.log('🌱 Seeding database...')
 
-  // Create system user (Anonymous - userId 2 as specified in plan)
+  // Create system user (User 1) with neutral colors
+  const system = await prisma.user.upsert({
+    where: { username: 'system' },
+    update: {},
+    create: {
+      id: 1,
+      username: 'system',
+      title: 'System',
+      description: 'System user for front page',
+      color1: '#eeeeee',
+      color2: '#111111',
+      type: 'system'
+    }
+  })
+
+  // Create anonymous user (User 2 as specified in plan)
   const anonymous = await prisma.user.upsert({
     where: { username: 'anonymous' },
     update: {},
@@ -61,7 +76,12 @@ async function main() {
   })
 
   // Create sample posts with URLs
-  const posts = [
+  const posts: Array<{
+    user: any
+    title: string | null
+    urls: string[]
+    metadataStatus: MetadataStatus
+  }> = [
     {
       user: alice,
       title: 'Essential Design Tools',
@@ -69,7 +89,8 @@ async function main() {
         'https://figma.com',
         'https://dribbble.com',
         'https://behance.net'
-      ]
+      ],
+      metadataStatus: MetadataStatus.SUCCESS // These already have metadata
     },
     {
       user: alice,
@@ -77,7 +98,8 @@ async function main() {
       urls: [
         'https://coolors.co',
         'https://unsplash.com'
-      ]
+      ],
+      metadataStatus: MetadataStatus.PENDING // These need metadata processing
     },
     {
       user: bob,
@@ -86,7 +108,8 @@ async function main() {
         'https://github.com',
         'https://stackoverflow.com',
         'https://vercel.com'
-      ]
+      ],
+      metadataStatus: MetadataStatus.SUCCESS
     },
     {
       user: bob,
@@ -94,7 +117,8 @@ async function main() {
       urls: [
         'https://developer.mozilla.org',
         'https://typescript.org'
-      ]
+      ],
+      metadataStatus: MetadataStatus.PENDING // These need metadata processing
     },
     {
       user: charlie,
@@ -103,7 +127,8 @@ async function main() {
         'https://spotify.com',
         'https://bandcamp.com',
         'https://soundcloud.com'
-      ]
+      ],
+      metadataStatus: MetadataStatus.SUCCESS
     },
     {
       user: anonymous,
@@ -112,7 +137,8 @@ async function main() {
         'https://reddit.com',
         'https://hackernews.com',
         'https://producthunt.com'
-      ]
+      ],
+      metadataStatus: MetadataStatus.PENDING // These need metadata processing
     }
   ]
 
@@ -145,16 +171,21 @@ async function main() {
       // Extract domain
       const domain = new URL(urlString).hostname
 
-      // Upsert URL
+      // Upsert URL with different metadata status based on post type
       const url = await prisma.uRL.upsert({
         where: { url: urlString },
         update: {},
         create: {
           url: urlString,
           domain,
-          title: `${domain.charAt(0).toUpperCase() + domain.slice(1)} - Great Resource`,
-          description: `Discover amazing content on ${domain}`,
-          metadataStatus: 'SUCCESS'
+          // Only add metadata for SUCCESS status URLs
+          title: postData.metadataStatus === MetadataStatus.SUCCESS 
+            ? `${domain.charAt(0).toUpperCase() + domain.slice(1)} - Great Resource`
+            : null,
+          description: postData.metadataStatus === MetadataStatus.SUCCESS
+            ? `Discover amazing content on ${domain}`
+            : null,
+          metadataStatus: postData.metadataStatus
         }
       })
 
@@ -171,6 +202,11 @@ async function main() {
 
   console.log('✅ Database seeded successfully!')
   console.log(`Created ${posts.length} posts across 4 users`)
+  
+  // Show metadata status counts
+  const pendingCount = await prisma.uRL.count({ where: { metadataStatus: 'PENDING' } })
+  const successCount = await prisma.uRL.count({ where: { metadataStatus: 'SUCCESS' } })
+  console.log(`📊 Metadata status: ${pendingCount} pending, ${successCount} successful`)
 }
 
 main()

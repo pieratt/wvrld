@@ -2,7 +2,8 @@
 
 import Header from '@/components/Header'
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
-import URLCard from '@/components/URLCard'
+import PostCard from '@/components/PostCard'
+import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import useSWR from 'swr'
 import { URLWithPost } from './api/urls/route'
 
@@ -10,6 +11,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function HomePage() {
   const { data: urls, error, isLoading } = useSWR<URLWithPost[]>('/api/urls', fetcher)
+  const groupedPosts = useGroupedPosts(urls)
 
   if (error) {
     return (
@@ -56,35 +58,16 @@ export default function HomePage() {
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Discover curated links and collections from the community. 
-            Each URL is colored by its bucket owner.
+            Each post is colored by its bucket owner.
           </p>
         </div>
 
-        {urls && urls.length > 0 ? (
+        {groupedPosts && groupedPosts.length > 0 ? (
           <MasonryGrid>
-            {urls.map((urlData) => (
-              <MasonryItem key={`${urlData.post.id}-${urlData.id}`}>
-                <URLCard
-                  url={{
-                    id: urlData.id,
-                    url: urlData.url,
-                    title: urlData.title,
-                    description: urlData.description,
-                    domain: urlData.domain,
-                    saves: urlData.saves,
-                    clicks: urlData.clicks
-                  }}
-                  owner={{
-                    id: urlData.post.owner.id,
-                    username: urlData.post.owner.username,
-                    title: urlData.post.owner.title,
-                    color1: urlData.post.owner.color1,
-                    color2: urlData.post.owner.color2
-                  }}
-                  post={{
-                    id: urlData.post.id,
-                    title: urlData.post.title
-                  }}
+            {groupedPosts.map((groupedPost) => (
+              <MasonryItem key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}>
+                <PostCard
+                  groupedPost={groupedPost}
                   showOwner={true}
                 />
               </MasonryItem>
@@ -93,7 +76,7 @@ export default function HomePage() {
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              No URLs yet
+              No posts yet
             </h2>
             <p className="text-gray-500">
               Be the first to share something interesting!

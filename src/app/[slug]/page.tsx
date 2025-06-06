@@ -4,7 +4,8 @@ import React from 'react'
 import { notFound } from 'next/navigation'
 import Header from '@/components/Header'
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
-import URLCard from '@/components/URLCard'
+import PostCard from '@/components/PostCard'
+import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import useSWR from 'swr'
 import { URLWithPost } from '../api/urls/route'
 import { UserWithStats } from '../api/users/[username]/route'
@@ -21,6 +22,7 @@ export default function BucketPage({ params }: BucketPageProps) {
   
   const { data: user, error: userError } = useSWR<UserWithStats>(`/api/users/${slug}`, fetcher)
   const { data: urls, error: urlsError, isLoading } = useSWR<URLWithPost[]>(`/api/urls?bucket=${slug}`, fetcher)
+  const groupedPosts = useGroupedPosts(urls)
 
   // Handle user not found
   if (userError && userError.status === 404) {
@@ -113,36 +115,15 @@ export default function BucketPage({ params }: BucketPageProps) {
           </div>
         </div>
 
-        {/* URLs Grid */}
-        {urls && urls.length > 0 ? (
+        {/* Posts Grid */}
+        {groupedPosts && groupedPosts.length > 0 ? (
           <MasonryGrid>
-            {urls.map((urlData) => (
-              <MasonryItem key={`${urlData.post.id}-${urlData.id}`}>
-                <Link href={`/${slug}/${urlData.post.id}`} className="block">
-                  <URLCard
-                    url={{
-                      id: urlData.id,
-                      url: urlData.url,
-                      title: urlData.title,
-                      description: urlData.description,
-                      domain: urlData.domain,
-                      saves: urlData.saves,
-                      clicks: urlData.clicks
-                    }}
-                    owner={{
-                      id: urlData.post.owner.id,
-                      username: urlData.post.owner.username,
-                      title: urlData.post.owner.title,
-                      color1: urlData.post.owner.color1,
-                      color2: urlData.post.owner.color2
-                    }}
-                    post={{
-                      id: urlData.post.id,
-                      title: urlData.post.title
-                    }}
-                    showOwner={false}
-                  />
-                </Link>
+            {groupedPosts.map((groupedPost) => (
+              <MasonryItem key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}>
+                <PostCard
+                  groupedPost={groupedPost}
+                  showOwner={false}
+                />
               </MasonryItem>
             ))}
           </MasonryGrid>
@@ -152,7 +133,7 @@ export default function BucketPage({ params }: BucketPageProps) {
               This bucket is empty
             </h2>
             <p className="text-gray-500">
-              No URLs have been added to this bucket yet.
+              No posts have been added to this bucket yet.
             </p>
           </div>
         )}
