@@ -35,19 +35,32 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
     toggleSave(url)
   }
 
+  // Get the first post ID for the universal post link
+  const firstPostId = data.posts[0]?.id;
+  
+  // Get the canonical owner's specific post ID
+  const canonicalOwnerPostId = data.posts.find(post => post.owner.id === data.canonicalOwner.id)?.id;
+
   return (
     <div 
-      className="w-full mb-6 p-4"
+      className="w-full mb-6 rounded-t-lg rounded-b-lg overflow-hidden"
       style={{ backgroundColor: colors.cardBg, color: colors.cardFont }}
     >
       {data.title && (
-        <div className="text-center mb-4">
-          <h2 className="mb-1">{data.title}</h2>
-          <div className="meta-text">@{data.canonicalOwner.username}</div>
+        <div className="text-center p-4">
+          <Link href={`/post/${firstPostId}`} className="hover:underline">
+            <h2 className="mb-1">{data.title}</h2>
+          </Link>
+          <Link 
+            href={`/${data.canonicalOwner.username}/${canonicalOwnerPostId}`} 
+            className="meta-text hover:underline"
+          >
+            @{data.canonicalOwner.username}
+          </Link>
         </div>
       )}
       
-      {data.urls.map((urlData) => {
+      {data.urls.map((urlData, index) => {
         // On front page, each URL gets its creator's colors; on user page, use page colors
         const urlColors = isFront ? {
           cardBg: urlData.post.owner.color1,
@@ -57,7 +70,7 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
         return (
           <div 
             key={urlData.id} 
-            className="mb-4 last:mb-0 p-2"
+            className="p-2"
             style={{ backgroundColor: urlColors.cardBg, color: urlColors.cardFont }}
           >
             <div className="flex items-start gap-3">
@@ -77,21 +90,22 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
                   {urlData.title || urlData.url}
                 </a>
                 
-                <div className="meta-text flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <Link 
+                    href={`/${urlData.post.owner.username}/${urlData.post.id}`}
+                    className="hover:underline"
+                    style={{ opacity: 1 }}
+                  >
+                    @{urlData.post.owner.username}
+                  </Link>
                   <a 
                     href={urlData.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline"
+                    className="hover:underline meta-text"
                   >
                     {urlData.domain}
                   </a>
-                  <Link 
-                    href={`/${urlData.post.owner.username}`}
-                    className="hover:underline"
-                  >
-                    @{urlData.post.owner.username}
-                  </Link>
                   <button
                     onClick={() => handleSave({
                       id: urlData.id,
@@ -99,7 +113,7 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
                       title: urlData.title,
                       domain: urlData.domain
                     })}
-                    className={`hover:underline ${isSaved(urlData.id) ? 'underline' : ''}`}
+                    className={`hover:underline meta-text ${isSaved(urlData.id) ? 'underline' : ''}`}
                   >
                     {urlData.saves + (isSaved(urlData.id) ? 1 : 0)} saved
                   </button>

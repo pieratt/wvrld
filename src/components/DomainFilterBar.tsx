@@ -37,28 +37,34 @@ export function DomainFilterBar() {
   if (!urls) return <div>Loading filters...</div>;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0">
       {domains.slice(0, 10).map(({ domain, count }) => (
-        <button
+        <div
           key={domain}
-          onClick={() => toggleTld(domain)}
-          className={`block w-full text-left px-3 py-1 rounded-full ${count === 0 ? 'opacity-15 pointer-events-none' : tlds.has(domain) ? 'opacity-100' : 'opacity-30'}`}
-          style={{ 
-            backgroundColor: colors.pillBg, 
-            color: colors.pillFont 
-          }}
+          className={`w-full ${count === 0 ? 'opacity-15 pointer-events-none' : tlds.has(domain) ? 'opacity-100' : 'opacity-30'}`}
         >
-          {domain} ({count})
-        </button>
+          <button
+            onClick={() => toggleTld(domain)}
+            className="w-full text-left px-3 py-2 rounded-full"
+            style={{ 
+              backgroundColor: colors.pillBg, 
+              color: colors.pillFont 
+            }}
+          >
+            {domain} ({count})
+          </button>
+        </div>
       ))}
       
       {tlds.size > 0 && (
-        <button 
-          onClick={clearAllFilters}
-          className="block w-full text-left meta-text hover:underline px-3 py-1"
-        >
-          clear all
-        </button>
+        <div className="pt-2">
+          <button 
+            onClick={clearAllFilters}
+            className="w-full text-left meta-text hover:underline px-3 py-1"
+          >
+            clear all
+          </button>
+        </div>
       )}
     </div>
   );
