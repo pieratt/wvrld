@@ -2,10 +2,9 @@
 
 import React from 'react'
 import { notFound } from 'next/navigation'
-import Header from '@/components/Header'
-import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
 import PostCard from '@/components/PostCard'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
+import { palette } from '@/lib/palette'
 import useSWR from 'swr'
 import { URLWithPost } from '../api/urls/route'
 import { UserWithStats } from '../api/users/[username]/route'
@@ -31,113 +30,83 @@ export default function BucketPage({ params }: BucketPageProps) {
 
   if (userError || urlsError) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Error loading content</h1>
-            <p className="text-gray-600">Please try refreshing the page.</p>
-          </div>
-        </main>
-      </div>
+      <main className="main-grid">
+        <aside></aside>
+        <section>
+          <div>Error loading content</div>
+        </section>
+      </main>
     )
   }
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
-            <div className="animate-pulse">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg h-48 shadow-sm"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <main className="main-grid">
+        <aside></aside>
+        <section>
+          <div>Loading...</div>
+        </section>
+      </main>
     )
   }
 
-  const gradientStyle = {
-    background: `linear-gradient(135deg, ${user.color1}, ${user.color2})`
-  }
+  const pageOwner = {
+    id: user.id,
+    username: user.username,
+    title: user.title,
+    description: user.description,
+    image1: null,
+    image2: null,
+    color1: user.color1,
+    color2: user.color2,
+    type: user.type || 'user',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  // Get page colors for this user's bucket
+  const colors = palette({
+    cardOwner: pageOwner,
+    isFront: false,
+    pageOwner
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        currentBucket={{
-          id: user.id,
-          username: user.username,
-          title: user.title,
-          description: user.description,
-          color1: user.color1,
-          color2: user.color2,
-          type: user.type || 'user'
-        }} 
-      />
-      
-      <main className="container mx-auto px-4 py-8">
-        {/* Bucket Stats */}
-        <div className="mb-8 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div 
-                className="w-12 h-12 rounded-full"
-                style={gradientStyle}
-              />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {user.title || user.username}
-                </h1>
-                {user.description && (
-                  <p className="text-gray-600">{user.description}</p>
-                )}
-              </div>
-            </div>
-            
-            <Link
-              href={`/${slug}/edit`}
-              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-            >
-              Edit Bucket
-            </Link>
+    <main 
+      className="main-grid"
+      style={{ backgroundColor: colors.pageBg, color: colors.pageFont }}
+    >
+      <aside className="sticky top-0 h-screen pt-4">
+        <div className="space-y-2">
+          <h1>{user.title || user.username}</h1>
+          {user.description && (
+            <p className="meta-text">{user.description}</p>
+          )}
+          <div className="meta-text">
+            <div>{user.stats.totalURLs} URLs</div>
+            <div>{user.stats.uniqueDomains} domains</div>
+            <div>{user.stats.totalPosts} posts</div>
           </div>
-          
-          <div className="flex gap-6 text-sm text-gray-600">
-            <span><strong>{user.stats.totalURLs}</strong> URLs</span>
-            <span><strong>{user.stats.uniqueDomains}</strong> domains</span>
-            <span><strong>{user.stats.totalPosts}</strong> posts</span>
-          </div>
+          <Link href={`/${slug}/edit`} className="hover:underline">
+            edit bucket
+          </Link>
         </div>
-
-        {/* Posts Grid */}
+      </aside>
+      
+      <section>
         {groupedPosts && groupedPosts.length > 0 ? (
-          <MasonryGrid>
-            {groupedPosts.map((groupedPost) => (
-              <MasonryItem key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}>
-                <PostCard
-                  groupedPost={groupedPost}
-                  showOwner={false}
-                />
-              </MasonryItem>
-            ))}
-          </MasonryGrid>
+          groupedPosts.map((groupedPost) => (
+            <PostCard
+              key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
+              data={groupedPost}
+              isFront={false}
+              pageOwner={pageOwner}
+            />
+          ))
         ) : (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              This bucket is empty
-            </h2>
-            <p className="text-gray-500">
-              No posts have been added to this bucket yet.
-            </p>
-          </div>
+          <div>This bucket is empty</div>
         )}
-      </main>
-    </div>
+      </section>
+    </main>
   )
 } 

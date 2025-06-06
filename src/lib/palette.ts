@@ -67,8 +67,14 @@ export function palette({
   const c2 = base.color2 ?? getUser(2).color2
   
   return { 
-    bg: c1, 
-    fg: pickLegible(c1), 
-    pill: c2 
+    // Page colors: bg = color2, font = color1
+    pageBg: c2,
+    pageFont: c1,
+    // Post card colors: bg = color1, font = color2
+    cardBg: cardOwner.color1,
+    cardFont: cardOwner.color2,
+    // Filter pill colors: bg = color2, font = color1
+    pillBg: c2,
+    pillFont: c1
   }
 } 

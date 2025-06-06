@@ -1,8 +1,36 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-size: 14px;
+}
+
+* {
+  font-family: 'Inconsolata', monospace;
+  font-size: var(--font-size);
+  font-weight: 400;
+}
+
+.meta-text {
+  opacity: 70%;
+}
+
+/* Remove any existing complex styles */
+/* Base layout grid */
+.main-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Reset button styles */
+button {
+  all: unset;
+  cursor: pointer;
 }
 
 @theme inline {

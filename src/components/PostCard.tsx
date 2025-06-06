@@ -3,129 +3,112 @@
 import Link from 'next/link'
 import { GroupedPost } from '@/hooks/useGroupedPosts'
 import { useSavedURLsContext } from '@/contexts/SavedURLsContext'
+import { palette } from '@/lib/palette'
 
-interface PostCardProps {
-  groupedPost: GroupedPost
-  showOwner?: boolean
-}
+type PostCardProps = {
+  data: GroupedPost;
+  isFront?: boolean;
+  pageOwner?: any;
+};
 
-export default function PostCard({ groupedPost, showOwner = true }: PostCardProps) {
+export default function PostCard({ data, isFront = false, pageOwner }: PostCardProps) {
   const { isSaved, toggleSave } = useSavedURLsContext()
+  
+  // Ensure canonical owner has all required properties for palette function
+  const cardOwner = {
+    ...data.canonicalOwner,
+    type: null, // Add missing property
+    description: null,
+    image1: null,
+    image2: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 
-  // Create gradient background from canonical owner colors
-  const gradientStyle = {
-    background: `linear-gradient(135deg, ${groupedPost.canonicalOwner.color1}, ${groupedPost.canonicalOwner.color2})`
-  }
+  const colors = palette({
+    cardOwner,
+    isFront,
+    pageOwner,
+  })
 
-  const handleSaveClick = async (e: React.MouseEvent, url: any) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    await toggleSave({
-      id: url.id,
-      url: url.url,
-      title: url.title,
-      domain: url.domain
-    })
+  const handleSave = (url: { id: number; url: string; title: string | null; domain: string | null; }) => {
+    toggleSave(url)
   }
 
   return (
-    <div className="group relative bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden">
-      {/* Gradient header bar */}
-      <div className="h-1" style={gradientStyle} />
-      
-      <div className="p-4">
-        {/* Post Title */}
-        <div className="mb-4">
-          <h3 className="font-semibold text-gray-900 text-lg mb-1">
-            {groupedPost.title}
-          </h3>
-          {showOwner && (
-            <div className="text-sm text-gray-500">
-              @{groupedPost.canonicalOwner.username}
-              {groupedPost.posts.length > 1 && (
-                <span className="ml-2">
-                  +{groupedPost.posts.length - 1} other{groupedPost.posts.length > 2 ? 's' : ''}
-                </span>
-              )}
-            </div>
-          )}
+    <div 
+      className="w-full mb-6 p-4"
+      style={{ backgroundColor: colors.cardBg, color: colors.cardFont }}
+    >
+      {data.title && (
+        <div className="text-center mb-4">
+          <h2 className="mb-1">{data.title}</h2>
+          <div className="meta-text">@{data.canonicalOwner.username}</div>
         </div>
+      )}
+      
+      {data.urls.map((urlData) => {
+        // On front page, each URL gets its creator's colors; on user page, use page colors
+        const urlColors = isFront ? {
+          cardBg: urlData.post.owner.color1,
+          cardFont: urlData.post.owner.color2
+        } : colors;
 
-        {/* URLs List */}
-        <div className="space-y-3 mb-4">
-          {groupedPost.urls.map((urlData) => {
-            const contributorGradient = {
-              background: `linear-gradient(135deg, ${urlData.post.owner.color1}, ${urlData.post.owner.color2})`
-            }
-
-            return (
-              <div key={`${urlData.post.id}-${urlData.id}`} className="flex items-start gap-3 group/url">
-                {/* Contributor avatar */}
-                <div 
-                  className="w-6 h-6 rounded-full flex-shrink-0 mt-0.5"
-                  style={contributorGradient}
-                  title={`@${urlData.post.owner.username}`}
-                />
+        return (
+          <div 
+            key={urlData.id} 
+            className="mb-4 last:mb-0 p-2"
+            style={{ backgroundColor: urlColors.cardBg, color: urlColors.cardFont }}
+          >
+            <div className="flex items-start gap-3">
+              <img 
+                src={`https://www.google.com/s2/favicons?domain=${urlData.domain}`}
+                alt=""
+                className="w-8 h-8 flex-shrink-0 mt-1"
+              />
+              
+              <div className="flex-1">
+                <a 
+                  href={urlData.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block hover:underline mb-1"
+                >
+                  {urlData.title || urlData.url}
+                </a>
                 
-                {/* URL Content */}
-                <div className="flex-1 min-w-0">
+                <div className="meta-text flex items-center gap-2">
                   <a 
                     href={urlData.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block hover:opacity-80 transition-opacity"
+                    className="hover:underline"
                   >
-                    <h4 className="font-medium text-gray-900 line-clamp-1 text-sm mb-1">
-                      {urlData.title || urlData.url}
-                    </h4>
-                    {urlData.description && (
-                      <p className="text-gray-600 text-xs line-clamp-2 mb-1">
-                        {urlData.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">
-                        {urlData.domain || new URL(urlData.url).hostname}
-                      </span>
-                      {urlData.saves > 0 && (
-                        <span>{urlData.saves} saved</span>
-                      )}
-                    </div>
+                    {urlData.domain}
                   </a>
+                  <Link 
+                    href={`/${urlData.post.owner.username}`}
+                    className="hover:underline"
+                  >
+                    @{urlData.post.owner.username}
+                  </Link>
+                  <button
+                    onClick={() => handleSave({
+                      id: urlData.id,
+                      url: urlData.url,
+                      title: urlData.title,
+                      domain: urlData.domain
+                    })}
+                    className={`hover:underline ${isSaved(urlData.id) ? 'underline' : ''}`}
+                  >
+                    {urlData.saves + (isSaved(urlData.id) ? 1 : 0)} saved
+                  </button>
                 </div>
-
-                {/* Save button */}
-                <button
-                  onClick={(e) => handleSaveClick(e, urlData)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex-shrink-0 ${
-                    isSaved(urlData.id) 
-                      ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-                  }`}
-                  title={isSaved(urlData.id) ? 'Unsave this URL' : 'Save this URL'}
-                >
-                  {isSaved(urlData.id) ? 'Saved' : 'Save'}
-                </button>
               </div>
-            )
-          })}
-        </div>
-
-        {/* See All footer */}
-        <div className="pt-3 border-t border-gray-100">
-          <Link 
-            href={`/${groupedPost.canonicalOwner.username}/${groupedPost.posts[0].id}`}
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-2"
-          >
-            <div 
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={gradientStyle}
-            />
-            See All
-          </Link>
-        </div>
-      </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   )
 } 
