@@ -29,7 +29,7 @@ function pickLegible(backgroundColor: string): string {
 }
 
 // Get user by ID (mock function - in real app this would be a database call)
-function getUser(id: number): User {
+export function getUser(id: number): User {
   // Mock users for fallback
   const users: Record<number, User> = {
     1: {
@@ -62,7 +62,8 @@ export function palette({
   isFront: boolean
   pageOwner?: User
 }) {
-  const base = isFront ? getUser(1) : pageOwner ?? cardOwner
+  // Use cardOwner for front page instead of mock getUser(1)
+  const base = isFront ? cardOwner : pageOwner ?? cardOwner
   const c1 = base.color1 ?? getUser(2).color1
   const c2 = base.color2 ?? getUser(2).color2
   

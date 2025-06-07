@@ -7,6 +7,8 @@ import useSWR from 'swr'
 import { UserWithStats } from '../../api/users/[username]/route'
 import { PostWithDetails } from '../../api/posts/[postId]/route'
 import Link from 'next/link'
+import PageLayout from '@/components/PageLayout'
+import PostCard from '@/components/PostCard'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -54,58 +56,62 @@ export default function PostPage({ params }: PostPageProps) {
     pageOwner
   });
 
-  return (
-    <main 
-      className="main-grid"
-      style={{ backgroundColor: colors.pageBg, color: colors.pageFont }}
-    >
-      <aside className="sticky top-0 h-screen pt-4">
-        <div className="space-y-2">
-          <Link href={`/${slug}`} className="hover:underline">
-            ← {user.title || user.username}
-          </Link>
-          
-          <div className="meta-text">
-            <div>Post #{post.id}</div>
-            <div>{post.urls.length} URLs</div>
-          </div>
-          
-          <Link href={`/${slug}/${postId}/edit`} className="hover:underline">
-            edit post
-          </Link>
-        </div>
-      </aside>
+  // Convert post data to GroupedPost format for PostCard
+  const groupedPost = {
+    canonicalOwner: pageOwner,
+    title: post.title || 'Untitled',
+    posts: [{
+      id: post.id,
+      title: post.title,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      owner: pageOwner
+    }],
+    urls: post.urls.map((url: any) => ({
+      ...url,
+      post: {
+        id: post.id,
+        title: post.title,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        owner: pageOwner
+      }
+    }))
+  }
+
+  const sidebar = (
+    <div className="space-y-2">
+      <Link href={`/${slug}`} className="hover:underline">
+        ← {user.title || user.username}
+      </Link>
       
-      <section>
-        <div className="space-y-4">
-          {post.title && (
-            <h1>{post.title}</h1>
-          )}
-          
-          {post.urls.map((url: any) => (
-            <div key={url.id} className="space-y-1">
-              <a 
-                href={url.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block hover:underline"
-              >
-                {url.title || url.url}
-              </a>
-              
-              <div className="meta-text flex items-center gap-2">
-                <img 
-                  src={`https://www.google.com/s2/favicons?domain=${url.domain}`}
-                  alt=""
-                  className="w-4 h-4"
-                />
-                <span>{url.domain}</span>
-                <span>saved</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
+      <div className="meta-text">
+        <div>Post #{post.id}</div>
+        <div>{post.urls.length} URLs</div>
+      </div>
+      
+      <Link href={`/${slug}/${postId}/edit`} className="hover:underline">
+        edit post
+      </Link>
+    </div>
+  )
+
+  return (
+    <PageLayout
+      style={{
+        '--c1': colors.pageFont,
+        '--c2': colors.pageBg,
+        backgroundColor: 'var(--c2)',
+        color: 'var(--c1)',
+        minHeight: '100vh',
+      } as React.CSSProperties}
+      sidebar={sidebar}
+    >
+      <PostCard
+        data={groupedPost}
+        isFront={false}
+        pageOwner={pageOwner}
+      />
+    </PageLayout>
   )
 } 

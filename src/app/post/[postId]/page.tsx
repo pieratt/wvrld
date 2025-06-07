@@ -7,6 +7,8 @@ import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import useSWR from 'swr'
 import { URLWithPost } from '../../api/urls/route'
 import Link from 'next/link'
+import PageLayout from '@/components/PageLayout'
+import PostCard from '@/components/PostCard'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -54,88 +56,36 @@ export default function UniversalPostPage({ params }: UniversalPostPageProps) {
     pageOwner
   });
 
-  return (
-    <main 
-      className="main-grid"
-      style={{ backgroundColor: colors.pageBg, color: colors.pageFont }}
-    >
-      <aside className="sticky top-0 h-screen pt-4">
-        <div className="space-y-2">
-          <Link href="/" className="hover:underline">
-            ← home
-          </Link>
-          
-          <div className="meta-text">
-            <div>Universal Post #{postId}</div>
-            <div>{targetPost.urls.length} URLs</div>
-            <div>{targetPost.posts.length} contributors</div>
-          </div>
-        </div>
-      </aside>
+  const sidebar = (
+    <div className="space-y-2">
+      <Link href="/" className="hover:underline">
+        ← home
+      </Link>
       
-      <section>
-        <div className="space-y-4">
-          {targetPost.title && (
-            <div className="text-center">
-              <h1 className="mb-1">{targetPost.title}</h1>
-              <div className="meta-text">
-                by @{targetPost.canonicalOwner.username} and {targetPost.posts.length - 1} others
-              </div>
-            </div>
-          )}
-          
-          {targetPost.urls.map((urlData) => (
-            <div 
-              key={urlData.id} 
-              className="p-2"
-              style={{ 
-                backgroundColor: urlData.post.owner.color1, 
-                color: urlData.post.owner.color2 
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <img 
-                  src={`https://www.google.com/s2/favicons?domain=${urlData.domain}`}
-                  alt=""
-                  className="w-8 h-8 flex-shrink-0 mt-1"
-                />
-                
-                <div className="flex-1">
-                  <a 
-                    href={urlData.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block hover:underline mb-1"
-                  >
-                    {urlData.title || urlData.url}
-                  </a>
-                  
-                  <div className="flex items-center gap-2">
-                    <Link 
-                      href={`/${urlData.post.owner.username}/${urlData.post.id}`}
-                      className="hover:underline"
-                      style={{ opacity: 1 }}
-                    >
-                      @{urlData.post.owner.username}
-                    </Link>
-                    <a 
-                      href={urlData.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline meta-text"
-                    >
-                      {urlData.domain}
-                    </a>
-                    <span className="meta-text">
-                      {urlData.saves} saved
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
+      <div className="meta-text">
+        <div>Universal Post #{postId}</div>
+        <div>{targetPost.urls.length} URLs</div>
+        <div>{targetPost.posts.length} contributors</div>
+      </div>
+    </div>
+  )
+
+  return (
+    <PageLayout
+      style={{
+        '--c1': colors.pageFont,
+        '--c2': colors.pageBg,
+        backgroundColor: 'var(--c2)',
+        color: 'var(--c1)',
+        minHeight: '100vh',
+      } as React.CSSProperties}
+      sidebar={sidebar}
+    >
+      <PostCard
+        data={targetPost}
+        isFront={false}
+        pageOwner={pageOwner}
+      />
+    </PageLayout>
   )
 } 

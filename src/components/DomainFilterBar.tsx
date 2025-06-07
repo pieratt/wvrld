@@ -1,7 +1,7 @@
 'use client';
 
 import { useFeedFilters } from '@/contexts/FeedFilters';
-import { palette } from '@/lib/palette';
+import { palette, getUser } from '@/lib/palette';
 import useSWR from 'swr';
 import { URLWithPost } from '@/app/api/urls/route';
 
@@ -10,6 +10,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function DomainFilterBar() {
   const { tlds, toggleTld } = useFeedFilters();
   const { data: urls } = useSWR<URLWithPost[]>('/api/urls', fetcher);
+  const { data: systemUser } = useSWR('/api/users/id/1', fetcher);
   
   // Calculate domain counts from actual data
   const domainCounts = urls?.reduce((acc, url) => {
@@ -27,14 +28,7 @@ export function DomainFilterBar() {
     Array.from(tlds).forEach(domain => toggleTld(domain));
   };
 
-  // Get system colors for filter pills
-  const colors = palette({
-    cardOwner: { id: 1, username: 'system', title: 'System', color1: '#eeeeee', color2: '#111111', type: 'system' },
-    isFront: true,
-    pageOwner: undefined
-  });
-
-  if (!urls) return <div>Loading filters...</div>;
+  if (!urls || !systemUser) return <div>Loading filters...</div>;
 
   return (
     <nav className="tld-list">
