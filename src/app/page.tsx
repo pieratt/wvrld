@@ -17,13 +17,6 @@ function Feed() {
   const { tlds } = useFeedFilters()
   const groupedPosts = useGroupedPosts(urls)
 
-  // Get page colors for front page
-  const colors = palette({
-    cardOwner: { id: 1, username: 'system', title: 'System', color1: '#eeeeee', color2: '#111111', type: 'system' },
-    isFront: true,
-    pageOwner: undefined
-  })
-
   if (error) return <div>Failed to load</div>
   if (isLoading || !urls) return <div>Loading...</div>
 
@@ -34,10 +27,7 @@ function Feed() {
       )
 
   return (
-    <main 
-      className="main-grid"
-      style={{ backgroundColor: colors.pageBg, color: colors.pageFont }}
-    >
+    <main className="main-grid">
       <aside className="sticky top-0 h-screen pt-4">
         <DomainFilterBar />
       </aside>

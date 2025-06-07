@@ -42,70 +42,88 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
   const canonicalOwnerPostId = data.posts.find(post => post.owner.id === data.canonicalOwner.id)?.id;
 
   return (
-    <div 
-      className="w-full mb-6 rounded-t-lg rounded-b-lg overflow-hidden"
-      style={{ backgroundColor: colors.cardBg, color: colors.cardFont }}
+    <section 
+      className="post-card masonry-item"
+      style={{ 
+        '--c1': colors.cardBg, 
+        '--c2': colors.cardFont 
+      } as React.CSSProperties}
     >
       {data.title && (
-        <div className="text-center p-4">
+        <header>
           <Link href={`/post/${firstPostId}`} className="hover:underline">
-            <h2 className="mb-1">{data.title}</h2>
+            <h3 className="post-title">{data.title}</h3>
           </Link>
           <Link 
             href={`/${data.canonicalOwner.username}/${canonicalOwnerPostId}`} 
-            className="meta-text hover:underline"
+            className="post-author hover:underline"
           >
             @{data.canonicalOwner.username}
           </Link>
-        </div>
+        </header>
       )}
       
       {data.urls.map((urlData, index) => {
-        // On front page, each URL gets its creator's colors; on user page, use page colors
-        const urlColors = isFront ? {
-          cardBg: urlData.post.owner.color1,
-          cardFont: urlData.post.owner.color2
-        } : colors;
+        // Each URL gets its owner's colors (the user who posted this specific URL)
+        const urlOwner = {
+          ...urlData.post.owner,
+          type: null,
+          description: null,
+          image1: null,
+          image2: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        const urlColors = palette({
+          cardOwner: urlOwner,
+          isFront,
+          pageOwner,
+        });
 
         return (
           <div 
             key={urlData.id} 
-            className="p-2"
-            style={{ backgroundColor: urlColors.cardBg, color: urlColors.cardFont }}
+            style={{
+              '--c1': urlColors.cardBg,
+              '--c2': urlColors.cardFont,
+              backgroundColor: 'var(--c1)',
+              color: 'var(--c2)',
+              padding: '0.5rem'
+            } as React.CSSProperties}
           >
-            <div className="flex items-start gap-3">
+            <div className="url-row">
               <img 
                 src={`https://www.google.com/s2/favicons?domain=${urlData.domain}`}
                 alt=""
-                className="w-8 h-8 flex-shrink-0 mt-1"
+                className="ico"
               />
-              
-              <div className="flex-1">
-                <a 
-                  href={urlData.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block hover:underline mb-1"
-                >
-                  {urlData.title || urlData.url}
-                </a>
-                
-                <div className="flex items-center gap-2">
-                  <Link 
-                    href={`/${urlData.post.owner.username}/${urlData.post.id}`}
-                    className="hover:underline"
-                    style={{ opacity: 1 }}
-                  >
-                    @{urlData.post.owner.username}
-                  </Link>
+              <div>
+                <div>
                   <a 
                     href={urlData.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline meta-text"
+                    className="meta-link"
+                  >
+                    {urlData.title || urlData.url}
+                  </a>
+                </div>
+                <div>
+                  <a 
+                    href={urlData.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="meta-link"
                   >
                     {urlData.domain}
-                  </a>
+                  </a>{' '}
+                  <Link 
+                    href={`/${urlData.post.owner.username}/${urlData.post.id}`}
+                    className="meta-link"
+                  >
+                    @{urlData.post.owner.username}
+                  </Link>{' '}
                   <button
                     onClick={() => handleSave({
                       id: urlData.id,
@@ -113,7 +131,7 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
                       title: urlData.title,
                       domain: urlData.domain
                     })}
-                    className={`hover:underline meta-text ${isSaved(urlData.id) ? 'underline' : ''}`}
+                    className={`meta-link${isSaved(urlData.id) ? ' saved' : ''}`}
                   >
                     {urlData.saves + (isSaved(urlData.id) ? 1 : 0)} saved
                   </button>
@@ -123,6 +141,6 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
           </div>
         );
       })}
-    </div>
+    </section>
   )
 } 

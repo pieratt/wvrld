@@ -48,9 +48,81 @@ button {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  /* these are only a dark-mode fallback.
+     real colors come from runtime CSS vars injected in layout.tsx */
+  background: var(--c2, var(--background));
+  color: var(--c1, var(--foreground));
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.post-card {
+  background-color: var(--c1);
+  color: var(--c2);
+  border-radius: 0.375rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.post-title {
+  text-align: center;
+  font-weight: bold;
+}
+
+.post-author {
+  text-align: center;
+  opacity: 70%;
+}
+
+.url-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0;
+  margin: 0;
+}
+
+.url-row .ico {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.meta-link {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.meta-link:hover {
+  text-decoration: none;
+}
+
+.meta-link.saved {
+  text-decoration: underline;
+}
+
+.tld-pill {
+  background-color: var(--c2);
+  color: var(--c1);
+  border-radius: 9999px;
+  padding: 0.25rem 1rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.tld-pill.off {
+  opacity: 0.3;
+}
+
+.tld-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 @tailwind base;

@@ -72,41 +72,48 @@ export default function BucketPage({ params }: BucketPageProps) {
   });
 
   return (
-    <main 
-      className="main-grid"
-      style={{ backgroundColor: colors.pageBg, color: colors.pageFont }}
+    <div 
+      style={{
+        '--c1': colors.pageFont,
+        '--c2': colors.pageBg,
+        backgroundColor: 'var(--c2)',
+        color: 'var(--c1)',
+        minHeight: '100vh',
+      } as React.CSSProperties}
     >
-      <aside className="sticky top-0 h-screen pt-4">
-        <div className="space-y-2">
-          <h1>{user.title || user.username}</h1>
-          {user.description && (
-            <p className="meta-text">{user.description}</p>
-          )}
-          <div className="meta-text">
-            <div>{user.stats.totalURLs} URLs</div>
-            <div>{user.stats.uniqueDomains} domains</div>
-            <div>{user.stats.totalPosts} posts</div>
+      <main className="main-grid">
+        <aside className="sticky top-0 h-screen pt-4">
+          <div className="space-y-2">
+            <h1>{user.title || user.username}</h1>
+            {user.description && (
+              <p className="meta-text">{user.description}</p>
+            )}
+            <div className="meta-text">
+              <div>{user.stats.totalURLs} URLs</div>
+              <div>{user.stats.uniqueDomains} domains</div>
+              <div>{user.stats.totalPosts} posts</div>
+            </div>
+            <Link href={`/${slug}/edit`} className="hover:underline">
+              edit bucket
+            </Link>
           </div>
-          <Link href={`/${slug}/edit`} className="hover:underline">
-            edit bucket
-          </Link>
-        </div>
-      </aside>
-      
-      <section>
-        {groupedPosts && groupedPosts.length > 0 ? (
-          groupedPosts.map((groupedPost) => (
-            <PostCard
-              key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
-              data={groupedPost}
-              isFront={false}
-              pageOwner={pageOwner}
-            />
-          ))
-        ) : (
-          <div>This bucket is empty</div>
-        )}
-      </section>
-    </main>
+        </aside>
+        
+        <section>
+          {groupedPosts && groupedPosts.length > 0 ? (
+            groupedPosts.map((groupedPost) => (
+              <PostCard
+                key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
+                data={groupedPost}
+                isFront={false}
+                pageOwner={pageOwner}
+              />
+            ))
+          ) : (
+            <div>This bucket is empty</div>
+          )}
+        </section>
+      </main>
+    </div>
   )
 } 

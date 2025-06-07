@@ -37,24 +37,19 @@ export function DomainFilterBar() {
   if (!urls) return <div>Loading filters...</div>;
 
   return (
-    <div className="space-y-0">
-      {domains.slice(0, 10).map(({ domain, count }) => (
-        <div
-          key={domain}
-          className={`w-full ${count === 0 ? 'opacity-15 pointer-events-none' : tlds.has(domain) ? 'opacity-100' : 'opacity-30'}`}
-        >
+    <nav className="tld-list">
+      {domains.slice(0, 10).map(({ domain, count }) => {
+        const on = tlds.has(domain);
+        return (
           <button
+            key={domain}
+            className={`tld-pill${!on ? ' off' : ''}`}
             onClick={() => toggleTld(domain)}
-            className="w-full text-left px-3 py-2 rounded-full"
-            style={{ 
-              backgroundColor: colors.pillBg, 
-              color: colors.pillFont 
-            }}
           >
-            {domain} ({count})
+            {domain} <span className="meta-text">({count})</span>
           </button>
-        </div>
-      ))}
+        );
+      })}
       
       {tlds.size > 0 && (
         <div className="pt-2">
@@ -66,6 +61,6 @@ export function DomainFilterBar() {
           </button>
         </div>
       )}
-    </div>
+    </nav>
   );
 } 

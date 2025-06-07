@@ -13,6 +13,14 @@ module.exports = {
       fontSize: {
         base: '14px',
       },
+      colors: {
+        pagebg: 'var(--c2)',
+        pagetext: 'var(--c1)',
+        cardbg: 'var(--c1)',
+        cardtext: 'var(--c2)',
+        pillbg: 'var(--c2)',
+        pilltext: 'var(--c1)',
+      },
     },
   },
   plugins: [],
