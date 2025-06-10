@@ -7,8 +7,8 @@ export default function Header() {
   const { totalSaved } = useSavedURLsContext()
 
   return (
-    <header className="w-full border-b border-black">
-      <div className="max-w-[1200px] mx-auto px-8 h-12 flex items-center justify-between">
+    <header className="w-full">
+      <div className="max-w-[832px] mx-auto px-8 h-12 flex items-center justify-between">
         <Link href="/" className="hover:underline">
           WVRLD
         </Link>

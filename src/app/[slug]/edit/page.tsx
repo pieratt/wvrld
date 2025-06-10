@@ -56,11 +56,11 @@ export default function BucketEditPage({ params }: BucketEditPageProps) {
     updatedAt: new Date()
   };
 
-  // Get page colors for this user's bucket
+  // Get page colors from the page owner (user)
   const colors = palette({
     cardOwner: pageOwner,
     isFront: false,
-    pageOwner
+    pageOwner: pageOwner
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +97,7 @@ export default function BucketEditPage({ params }: BucketEditPageProps) {
   return (
     <main 
       className="main-grid"
-      style={{ backgroundColor: colors.pageBg, color: colors.pageFont }}
+      style={{ color: colors.pageFont }}
     >
       <aside className="sticky top-0 h-screen pt-4">
         <div>

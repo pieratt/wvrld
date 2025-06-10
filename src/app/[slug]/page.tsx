@@ -4,12 +4,15 @@ import React from 'react'
 import { notFound } from 'next/navigation'
 import PostCard from '@/components/PostCard'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
+import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import { palette } from '@/lib/palette'
 import useSWR from 'swr'
-import { URLWithPost } from '../api/urls/route'
+import { PostWithURLs } from '../api/posts/route'
 import { UserWithStats } from '../api/users/[username]/route'
 import Link from 'next/link'
 import PageLayout from '@/components/PageLayout'
+import { FeedFiltersProvider, useFeedFilters } from '@/contexts/FeedFilters'
+import { UnifiedSidebar } from '@/components/UnifiedSidebar'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -17,19 +20,58 @@ interface BucketPageProps {
   params: Promise<{ slug: string }>
 }
 
-export default function BucketPage({ params }: BucketPageProps) {
-  const { slug } = React.use(params)
-  
+function BucketPageContent({ slug }: { slug: string }) {
   const { data: user, error: userError } = useSWR<UserWithStats>(`/api/users/${slug}`, fetcher)
-  const { data: urls, error: urlsError, isLoading } = useSWR<URLWithPost[]>(`/api/urls?bucket=${slug}`, fetcher)
-  const groupedPosts = useGroupedPosts(urls)
+  const { data: posts, error: postsError, isLoading } = useSWR<PostWithURLs[]>(`/api/posts?bucket=${slug}`, fetcher)
+  const { tlds } = useFeedFilters()
+  const groupedPosts = useGroupedPosts(posts)
+  const filteredPosts = useFilteredGroupedPosts(groupedPosts, tlds)
+
+  // Create pageOwner object (with fallback values for when user is not loaded yet)
+  const pageOwner = user ? {
+    id: user.id,
+    username: user.username,
+    title: user.title,
+    description: user.description,
+    image1: null,
+    image2: null,
+    color1: user.color1,
+    color2: user.color2,
+    type: user.type || 'user',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  } : {
+    id: 1,
+    username: 'loading',
+    title: 'Loading...',
+    description: null,
+    image1: null,
+    image2: null,
+    color1: '#eeeeee',
+    color2: '#111111',
+    type: 'user',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  // Get page colors from the page owner (user)
+  const colors = palette({
+    cardOwner: pageOwner,
+    isFront: false,
+    pageOwner: pageOwner
+  });
+
+  // Inject only font color at document level
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--c1', colors.pageFont)
+  }, [colors.pageFont])
 
   // Handle user not found
   if (userError && userError.status === 404) {
     notFound()
   }
 
-  if (userError || urlsError) {
+  if (userError || postsError) {
     return (
       <main className="main-grid">
         <aside></aside>
@@ -51,67 +93,52 @@ export default function BucketPage({ params }: BucketPageProps) {
     )
   }
 
-  const pageOwner = {
-    id: user.id,
-    username: user.username,
-    title: user.title,
-    description: user.description,
-    image1: null,
-    image2: null,
-    color1: user.color1,
-    color2: user.color2,
-    type: user.type || 'user',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
-
-  // Get page colors for this user's bucket
-  const colors = palette({
-    cardOwner: pageOwner,
-    isFront: false,
-    pageOwner
-  });
-
-  const sidebar = (
-    <div className="space-y-2">
-      <h1>{user.title || user.username}</h1>
-      {user.description && (
-        <p className="meta-text">{user.description}</p>
-      )}
-      <div className="meta-text">
-        <div>{user.stats.totalURLs} URLs</div>
-        <div>{user.stats.uniqueDomains} domains</div>
-        <div>{user.stats.totalPosts} posts</div>
-      </div>
-      <Link href={`/${slug}/edit`} className="hover:underline">
-        edit bucket
-      </Link>
-    </div>
-  )
+  // Use the actual user data for the sidebar (not the fallback pageOwner)
+  const actualUser = user!; // Safe to use since we've already checked if user exists
 
   return (
     <PageLayout
-      style={{
-        '--c1': colors.pageFont,
-        '--c2': colors.pageBg,
-        backgroundColor: 'var(--c2)',
-        color: 'var(--c1)',
-        minHeight: '100vh',
-      } as React.CSSProperties}
-      sidebar={sidebar}
+      sidebar={
+        <UnifiedSidebar 
+          bucket={slug}
+          userInfo={{
+            title: actualUser.title,
+            username: actualUser.username,
+            description: actualUser.description,
+            stats: actualUser.stats
+          }}
+        />
+      }
     >
-      {groupedPosts && groupedPosts.length > 0 ? (
-        groupedPosts.map((groupedPost) => (
+      {filteredPosts && filteredPosts.length > 0 ? (
+        filteredPosts.map((groupedPost) => (
           <PostCard
             key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
             data={groupedPost}
             isFront={false}
-            pageOwner={pageOwner}
+            pageOwner={{
+              id: actualUser.id,
+              username: actualUser.username,
+              title: actualUser.title,
+              color1: actualUser.color1,
+              color2: actualUser.color2,
+              type: actualUser.type || 'user'
+            }}
           />
         ))
       ) : (
         <div>This bucket is empty</div>
       )}
     </PageLayout>
+  )
+}
+
+export default function BucketPage({ params }: BucketPageProps) {
+  const { slug } = React.use(params)
+  
+  return (
+    <FeedFiltersProvider>
+      <BucketPageContent slug={slug} />
+    </FeedFiltersProvider>
   )
 } 

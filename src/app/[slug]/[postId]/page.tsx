@@ -49,11 +49,11 @@ export default function PostPage({ params }: PostPageProps) {
     updatedAt: new Date()
   };
 
-  // Get page colors for this user's bucket
+  // Get page colors from the page owner (user)
   const colors = palette({
     cardOwner: pageOwner,
     isFront: false,
-    pageOwner
+    pageOwner: pageOwner
   });
 
   // Convert post data to GroupedPost format for PostCard
@@ -98,13 +98,6 @@ export default function PostPage({ params }: PostPageProps) {
 
   return (
     <PageLayout
-      style={{
-        '--c1': colors.pageFont,
-        '--c2': colors.pageBg,
-        backgroundColor: 'var(--c2)',
-        color: 'var(--c1)',
-        minHeight: '100vh',
-      } as React.CSSProperties}
       sidebar={sidebar}
     >
       <PostCard

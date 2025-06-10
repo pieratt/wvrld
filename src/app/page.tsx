@@ -4,9 +4,10 @@ import Header from '@/components/Header'
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
 import PostCard from '@/components/PostCard'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
+import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import useSWR from 'swr'
-import { URLWithPost } from './api/urls/route'
-import { DomainFilterBar } from '@/components/DomainFilterBar'
+import { PostWithURLs } from './api/posts/route'
+import { UnifiedSidebar } from '@/components/UnifiedSidebar'
 import { FeedFiltersProvider, useFeedFilters } from '@/contexts/FeedFilters'
 import { palette, getUser } from '@/lib/palette'
 import PageLayout from '@/components/PageLayout'
@@ -15,10 +16,11 @@ import { useEffect } from 'react'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 function Feed() {
-  const { data: urls, error: urlsError, isLoading: urlsLoading } = useSWR<URLWithPost[]>('/api/urls', fetcher)
+  const { data: posts, error: postsError, isLoading: postsLoading } = useSWR<PostWithURLs[]>('/api/posts', fetcher)
   const { data: systemUser, error: userError, isLoading: userLoading } = useSWR('/api/users/id/1', fetcher)
   const { tlds } = useFeedFilters()
-  const groupedPosts = useGroupedPosts(urls)
+  const groupedPosts = useGroupedPosts(posts)
+  const filteredPosts = useFilteredGroupedPosts(groupedPosts, tlds)
 
   // Get system user colors for front page from database (with fallback for loading state)
   const colors = systemUser ? palette({
@@ -41,24 +43,17 @@ function Feed() {
     pillFont: '#eeeeee'
   }
 
-  // Inject colors at document level so body background updates
+  // Inject only font color at document level
   useEffect(() => {
     document.documentElement.style.setProperty('--c1', colors.pageFont)
-    document.documentElement.style.setProperty('--c2', colors.pageBg)
-  }, [colors.pageFont, colors.pageBg])
+  }, [colors.pageFont])
 
-  if (urlsError || userError) return <div>Failed to load</div>
-  if (urlsLoading || userLoading || !urls || !systemUser) return <div>Loading...</div>
-
-  const filteredPosts = !tlds.size 
-    ? groupedPosts 
-    : groupedPosts.filter(group => 
-        group.urls.some(url => url.domain && tlds.has(url.domain))
-      )
+  if (postsError || userError) return <div>Failed to load</div>
+  if (postsLoading || userLoading || !posts || !systemUser) return <div>Loading...</div>
 
   return (
     <PageLayout 
-      sidebar={<DomainFilterBar />}
+      sidebar={<UnifiedSidebar />}
     >
       {filteredPosts.map((group) => (
         <PostCard

@@ -16,7 +16,7 @@ export default function SavedPage() {
   const { data: allUrls, isLoading: urlsLoading } = useSWR<URLWithPost[]>('/api/urls', fetcher)
   const { data: systemUser, isLoading: userLoading } = useSWR('/api/users/id/1', fetcher)
 
-  // Get system colors for saved page from database (with fallback for loading state)
+  // Get system user colors for saved page from database (with fallback for loading state)
   const colors = systemUser ? palette({
     cardOwner: {
       id: systemUser.id,
@@ -37,11 +37,10 @@ export default function SavedPage() {
     pillFont: '#eeeeee'
   }
 
-  // Inject colors at document level so body background updates
+  // Inject only font color at document level
   useEffect(() => {
     document.documentElement.style.setProperty('--c1', colors.pageFont)
-    document.documentElement.style.setProperty('--c2', colors.pageBg)
-  }, [colors.pageFont, colors.pageBg])
+  }, [colors.pageFont])
 
   if (!systemUser) return <div>Loading...</div>
 
