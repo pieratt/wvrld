@@ -15,7 +15,7 @@ type PostCardProps = {
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function PostCard({ data, isFront = false, pageOwner }: PostCardProps) {
-  const { isSaved, toggleSave } = useSavedURLsContext()
+  const { isSaved, toggleSave, batchToggleSave } = useSavedURLsContext()
   const { isVisited, markAsVisited } = useVisitedURLsContext()
   
   // Get system user (User ID 1) for default colors
@@ -39,32 +39,24 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
     window.open(urlData.url, '_blank', 'noopener,noreferrer')
   }
 
-  const handleSaveAll = () => {
-    // Check if all URLs are currently saved
-    const allSaved = data.urls.every(urlData => isSaved(urlData.id))
+  const handleSaveAll = async () => {
+    // Filter URLs based on context:
+    // - On front page (isFront=true): save all URLs from all users with this title
+    // - On user page (!isFront && pageOwner): save only URLs from the page owner
+    const urlsToConsider = !isFront && pageOwner 
+      ? data.urls.filter(urlData => urlData.post.owner.id === pageOwner.id)
+      : data.urls
     
-    // If all are saved, unsave them all; otherwise save them all
-    data.urls.forEach(urlData => {
-      const currentlySaved = isSaved(urlData.id)
-      
-      if (allSaved && currentlySaved) {
-        // Unsave all
-        handleSave({
-          id: urlData.id,
-          url: urlData.url,
-          title: urlData.title,
-          domain: urlData.domain
-        })
-      } else if (!allSaved && !currentlySaved) {
-        // Save all unsaved ones
-        handleSave({
-          id: urlData.id,
-          url: urlData.url,
-          title: urlData.title,
-          domain: urlData.domain
-        })
-      }
-    })
+    // Convert to the format expected by batchToggleSave
+    const urlsForBatch = urlsToConsider.map(urlData => ({
+      id: urlData.id,
+      url: urlData.url,
+      title: urlData.title,
+      domain: urlData.domain
+    }))
+    
+    // Use the batch toggle function which handles the logic internally
+    await batchToggleSave(urlsForBatch)
   }
 
   // Get the first post ID for the universal post link
@@ -114,15 +106,22 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
           </div>
           
           {/* Save All button */}
-          {hasURLs && (
-            <button
-              onClick={handleSaveAll}
-              className="text-sm hover:underline"
-              style={{ fontSize: '12px' }}
-            >
-              Saved
-            </button>
-          )}
+          {hasURLs && (() => {
+            // Filter URLs based on context for button display
+            const urlsToConsider = !isFront && pageOwner 
+              ? data.urls.filter(urlData => urlData.post.owner.id === pageOwner.id)
+              : data.urls
+            // Only show button if there are URLs to consider
+            return urlsToConsider.length > 0 && (
+              <button
+                onClick={handleSaveAll}
+                className="text-sm hover:underline"
+                style={{ fontSize: '12px' }}
+              >
+                {urlsToConsider.every(urlData => isSaved(urlData.id)) ? 'Unsave Post' : 'Save Post'}
+              </button>
+            )
+          })()}
         </div>
 
         {/* URLs section - only show if there are URLs */}

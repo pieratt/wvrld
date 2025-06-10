@@ -18,6 +18,12 @@ interface SavedURLsContextType {
     title: string | null
     domain: string | null
   }) => Promise<void>
+  batchToggleSave: (urls: Array<{
+    id: number
+    url: string
+    title: string | null
+    domain: string | null
+  }>, forceAction?: 'save' | 'unsave') => Promise<void>
   isLoading: boolean
   totalSaved: number
 }

@@ -101,10 +101,88 @@ export function useSavedURLs() {
     }
   }, [savedURLs, savedURLsData, saveToStorage])
 
+  // Batch toggle multiple URLs at once
+  const batchToggleSave = useCallback(async (urls: Array<{
+    id: number
+    url: string
+    title: string | null
+    domain: string | null
+  }>, forceAction?: 'save' | 'unsave') => {
+    if (urls.length === 0) return
+
+    // Determine what action to take
+    let action: 'save' | 'unsave'
+    if (forceAction) {
+      action = forceAction
+    } else {
+      // If all URLs are saved, unsave them; otherwise save them
+      const allSaved = urls.every(url => savedURLs.has(url.id))
+      action = allSaved ? 'unsave' : 'save'
+    }
+
+    // Prepare the new state
+    const newSavedURLs = new Set(savedURLs)
+    const newSavedURLsData = [...savedURLsData]
+    const urlsToProcess = urls.filter(url => {
+      const isCurrentlySaved = savedURLs.has(url.id)
+      return (action === 'save' && !isCurrentlySaved) || (action === 'unsave' && isCurrentlySaved)
+    })
+
+    if (urlsToProcess.length === 0) return
+
+    // Apply optimistic updates
+    urlsToProcess.forEach(url => {
+      if (action === 'save') {
+        newSavedURLs.add(url.id)
+        const newSavedURL: SavedURL = {
+          id: url.id,
+          url: url.url,
+          title: url.title,
+          domain: url.domain,
+          savedAt: new Date().toISOString()
+        }
+        newSavedURLsData.unshift(newSavedURL)
+      } else {
+        newSavedURLs.delete(url.id)
+        const index = newSavedURLsData.findIndex(savedUrl => savedUrl.id === url.id)
+        if (index !== -1) {
+          newSavedURLsData.splice(index, 1)
+        }
+      }
+    })
+
+    // Update state
+    setSavedURLs(newSavedURLs)
+    setSavedURLsData(newSavedURLsData)
+    saveToStorage(newSavedURLsData)
+
+    // Update database for all URLs
+    try {
+      await Promise.allSettled(
+        urlsToProcess.map(url =>
+          fetch('/api/urls/save', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              urlId: url.id,
+              action: action
+            })
+          })
+        )
+      )
+    } catch (error) {
+      console.error('Error in batch save operation:', error)
+      // TODO: Revert optimistic updates on error
+    }
+  }, [savedURLs, savedURLsData, saveToStorage])
+
   return {
     savedURLs: savedURLsData,
     isSaved,
     toggleSave,
+    batchToggleSave,
     isLoading,
     totalSaved: savedURLsData.length
   }
