@@ -62,8 +62,7 @@ button {
 }
 
 body {
-  /* static white background for all pages */
-  background: white;
+  background: var(--c2, white);
   color: var(--c1, var(--foreground));
   font-family: 'DM Sans', sans-serif;
 }
@@ -202,6 +201,41 @@ body {
 
 .user-pill:hover {
   text-decoration: underline;
+}
+
+.editor-pill {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.editor-pill:hover {
+  background-color: var(--user-color1);
+  color: var(--user-color2);
+  text-decoration: none;
+  border-radius: 0.125rem;
+}
+
+.header-container {
+  max-width: 710px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  color: var(--c1);
+}
+
+@media (max-width: 1024px) {
+  .header-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 @tailwind base;

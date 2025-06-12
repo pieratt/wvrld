@@ -9,6 +9,29 @@ import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import useSWR from 'swr'
 import { URLWithPost } from '../api/urls/route'
 
+interface PostWithURLs {
+  id: number
+  title: string | null
+  createdAt: string
+  owner: {
+    id: number
+    username: string
+    title: string | null
+    color1: string
+    color2: string
+  }
+  urls: {
+    id: number
+    url: string
+    domain: string | null
+    title: string | null
+    description: string | null
+    saves: number
+    clicks: number
+    createdAt: string
+  }[]
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function SavedPage() {
@@ -37,10 +60,11 @@ export default function SavedPage() {
     pillFont: '#eeeeee'
   }
 
-  // Inject only font color at document level
+  // Inject font and background colors at document level
   useEffect(() => {
     document.documentElement.style.setProperty('--c1', colors.pageFont)
-  }, [colors.pageFont])
+    document.documentElement.style.setProperty('--c2', colors.pageBg)
+  }, [colors.pageFont, colors.pageBg])
 
   if (!systemUser) return <div>Loading...</div>
 
@@ -48,8 +72,49 @@ export default function SavedPage() {
   const savedUrlIds = new Set(savedURLs.map(url => url.id))
   const savedUrlsWithPost = allUrls?.filter(url => savedUrlIds.has(url.id)) || []
   
+  // Convert URLWithPost[] to PostWithURLs[] format for useGroupedPosts
+  const convertedPosts = savedUrlsWithPost.reduce((posts: PostWithURLs[], urlWithPost) => {
+    const postId = urlWithPost.post.id
+    const existingPost = posts.find(p => p.id === postId)
+    
+    if (existingPost) {
+      // Add URL to existing post if not already there
+      if (!existingPost.urls.some((u: any) => u.id === urlWithPost.id)) {
+        existingPost.urls.push({
+          id: urlWithPost.id,
+          url: urlWithPost.url,
+          domain: urlWithPost.domain,
+          title: urlWithPost.title,
+          description: urlWithPost.description,
+          saves: urlWithPost.saves,
+          clicks: urlWithPost.clicks,
+          createdAt: urlWithPost.createdAt
+        })
+      }
+    } else {
+      // Create new post with this URL
+      posts.push({
+        id: urlWithPost.post.id,
+        title: urlWithPost.post.title,
+        createdAt: urlWithPost.createdAt, // Use URL's createdAt as fallback
+        owner: urlWithPost.post.owner,
+        urls: [{
+          id: urlWithPost.id,
+          url: urlWithPost.url,
+          domain: urlWithPost.domain,
+          title: urlWithPost.title,
+          description: urlWithPost.description,
+          saves: urlWithPost.saves,
+          clicks: urlWithPost.clicks,
+          createdAt: urlWithPost.createdAt
+        }]
+      })
+    }
+    return posts
+  }, [])
+  
   // Group saved URLs like the front page
-  const groupedPosts = useGroupedPosts(savedUrlsWithPost)
+  const groupedPosts = useGroupedPosts(convertedPosts)
 
   if (savedLoading || urlsLoading || userLoading) {
     return (

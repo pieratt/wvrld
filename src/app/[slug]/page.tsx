@@ -54,17 +54,23 @@ function BucketPageContent({ slug }: { slug: string }) {
     updatedAt: new Date()
   };
 
-  // Get page colors from the page owner (user)
-  const colors = palette({
-    cardOwner: pageOwner,
-    isFront: false,
-    pageOwner: pageOwner
-  });
+  // Get system user for default sidebar colors
+  const { data: systemUser } = useSWR('/api/users/id/1', fetcher)
+  
+  // Use system colors for sidebar, not user colors
+  const systemColors = systemUser ? {
+    color1: systemUser.color1,
+    color2: systemUser.color2
+  } : {
+    color1: '#111111', 
+    color2: '#eeeeee'
+  };
 
-  // Inject only font color at document level
+  // Inject system colors for sidebar (not user colors)
   React.useEffect(() => {
-    document.documentElement.style.setProperty('--c1', colors.pageFont)
-  }, [colors.pageFont])
+    document.documentElement.style.setProperty('--c1', systemColors.color1)
+    document.documentElement.style.setProperty('--c2', systemColors.color2)
+  }, [systemColors.color1, systemColors.color2])
 
   // Handle user not found
   if (userError && userError.status === 404) {

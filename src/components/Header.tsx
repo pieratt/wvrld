@@ -8,9 +8,9 @@ export default function Header() {
 
   return (
     <header className="w-full">
-      <div className="max-w-[832px] mx-auto px-8 h-12 flex items-center justify-between">
+      <div className="header-container h-12 flex items-center justify-between">
         <Link href="/" className="hover:underline">
-          WVRLD
+        LAST PEOPLE
         </Link>
         
         <nav className="flex gap-8">

@@ -30,17 +30,35 @@ export function UnifiedSidebar({ bucket, userInfo }: UnifiedSidebarProps) {
   const postsUrl = bucket ? `/api/posts?bucket=${bucket}` : '/api/posts';
   const { data: posts } = useSWR<PostWithURLs[]>(postsUrl, fetcher);
   
-  // Calculate domain counts from posts data
+  // Calculate domain counts from posts data (counting unique URLs per domain)
   const domainCounts = posts?.reduce((acc, post) => {
+    // Track unique URLs to avoid double counting
+    const seenUrls = new Set<string>();
     post.urls.forEach(url => {
-      if (url.domain) {
+      if (url.domain && !seenUrls.has(url.url)) {
+        seenUrls.add(url.url);
         acc[url.domain] = (acc[url.domain] || 0) + 1;
       }
     });
     return acc;
   }, {} as Record<string, number>) || {};
+  
+  // Further deduplicate across all posts to get truly unique URL counts per domain
+  const allUniqueUrls = posts?.reduce((acc: {url: string, domain: string}[], post) => {
+    post.urls.forEach(url => {
+      if (url.domain && !acc.some(u => u.url === url.url)) {
+        acc.push({url: url.url, domain: url.domain});
+      }
+    });
+    return acc;
+  }, []) || [];
+  
+  const uniqueDomainCounts = allUniqueUrls.reduce((acc, urlInfo) => {
+    acc[urlInfo.domain] = (acc[urlInfo.domain] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const domains = Object.entries(domainCounts)
+  const domains = Object.entries(uniqueDomainCounts)
     .map(([domain, count]) => ({ domain, count }))
     .sort((a, b) => b.count - a.count);
 
@@ -124,13 +142,14 @@ export function UnifiedSidebar({ bucket, userInfo }: UnifiedSidebarProps) {
               <a
                 key={user.id}
                 href={`/${user.username}`}
-                className="block hover:underline"
+                className="editor-pill"
                 style={{ 
                   padding: '0.25rem 0.75rem', 
                   marginBottom: '0.1rem',
-                  color: user.color1,
-                  fontSize: '14px'
-                }}
+                  fontSize: '14px',
+                  '--user-color1': user.color1,
+                  '--user-color2': user.color2
+                } as React.CSSProperties}
               >
                 @{user.username}
               </a>
@@ -148,7 +167,7 @@ export function UnifiedSidebar({ bucket, userInfo }: UnifiedSidebarProps) {
               {posts.length} posts
             </div>
             <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {Object.keys(domainCounts).length} domains
+              {Object.keys(uniqueDomainCounts).length} domains
             </div>
             <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
               {posts.reduce((sum, post) => sum + post.urls.length, 0)} URLs

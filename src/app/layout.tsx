@@ -17,7 +17,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-pagebg text-pagetext">
+      <body>
         <SavedURLsProvider>
           <VisitedURLsProvider>
             <Header />

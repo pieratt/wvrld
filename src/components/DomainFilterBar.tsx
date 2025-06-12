@@ -14,13 +14,18 @@ export function DomainFilterBar() {
   const { data: systemUser } = useSWR('/api/users/id/1', fetcher);
   const { data: posts } = useSWR<PostWithURLs[]>('/api/posts', fetcher);
   
-  // Calculate domain counts from actual data
-  const domainCounts = urls?.reduce((acc, url) => {
-    if (url.domain) {
-      acc[url.domain] = (acc[url.domain] || 0) + 1;
+  // Calculate domain counts from actual data (deduplicating URLs)
+  const uniqueUrls = urls?.reduce((acc: {url: string, domain: string}[], urlData) => {
+    if (urlData.domain && !acc.some(u => u.url === urlData.url)) {
+      acc.push({url: urlData.url, domain: urlData.domain});
     }
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, []) || [];
+  
+  const domainCounts = uniqueUrls.reduce((acc, urlInfo) => {
+    acc[urlInfo.domain] = (acc[urlInfo.domain] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   const domains = Object.entries(domainCounts)
     .map(([domain, count]) => ({ domain, count }))
@@ -87,13 +92,14 @@ export function DomainFilterBar() {
             <a
               key={user.id}
               href={`/${user.username}`}
-              className="block hover:underline"
+              className="editor-pill"
               style={{ 
                 padding: '0.25rem 0.75rem', 
                 marginBottom: '0.1rem',
-                color: user.color1,
-                fontSize: '14px'
-              }}
+                fontSize: '14px',
+                '--user-color1': user.color1,
+                '--user-color2': user.color2
+              } as React.CSSProperties}
             >
               @{user.username}
             </a>

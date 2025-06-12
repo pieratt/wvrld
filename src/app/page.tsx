@@ -45,10 +45,11 @@ function Feed() {
     pillFont: '#eeeeee'
   }
 
-  // Inject only font color at document level
+  // Inject font and background colors at document level  
   useEffect(() => {
     document.documentElement.style.setProperty('--c1', colors.pageFont)
-  }, [colors.pageFont])
+    document.documentElement.style.setProperty('--c2', colors.pageBg)
+  }, [colors.pageFont, colors.pageBg])
 
   if (postsError || userError) return <div>Failed to load</div>
   if (postsLoading || userLoading || !posts || !systemUser) return <div>Loading...</div>
