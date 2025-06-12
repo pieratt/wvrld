@@ -107,17 +107,32 @@ export function useGroupedPosts(posts: PostWithURLs[] = []): GroupedPost[] {
             createdAt: post.createdAt,
             owner: post.owner
           })
+          
+          // Only add URLs that aren't already in the group
+          const newUrls = urlsWithPost.filter(newUrl => 
+            !group.urls.some(existingUrl => existingUrl.id === newUrl.id)
+          )
+          group.urls.push(...newUrls)
         }
-        
-        group.urls.push(...urlsWithPost)
       }
     })
     
     // Convert to array and sort by creation time (newest first)
-    return Array.from(groupMap.values()).sort((a, b) => {
+    const result = Array.from(groupMap.values()).sort((a, b) => {
       const aTime = Math.max(...a.posts.map(post => new Date(post.createdAt).getTime()))
       const bTime = Math.max(...b.posts.map(post => new Date(post.createdAt).getTime()))
       return bTime - aTime
     })
+    
+    // Quick debug: log any groups with potential duplicates
+    result.forEach(group => {
+      const urlIds = group.urls.map(url => url.id)
+      const uniqueUrlIds = [...new Set(urlIds)]
+      if (urlIds.length !== uniqueUrlIds.length) {
+        console.warn(`Group "${group.title}" has duplicate URLs:`, urlIds)
+      }
+    })
+    
+    return result
   }, [posts])
 } 

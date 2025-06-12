@@ -22,6 +22,8 @@ function Feed() {
   const groupedPosts = useGroupedPosts(posts)
   const filteredPosts = useFilteredGroupedPosts(groupedPosts, tlds)
 
+
+
   // Get system user colors for front page from database (with fallback for loading state)
   const colors = systemUser ? palette({
     cardOwner: {

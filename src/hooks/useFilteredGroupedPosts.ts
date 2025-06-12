@@ -10,7 +10,7 @@ export function useFilteredGroupedPosts(groupedPosts: GroupedPost[], selectedDom
       return groupedPosts
     }
 
-    // Filter posts by removing URLs that don't match the selected domains
+    // Filter posts by only showing URLs that match the selected domains
     const filteredPosts = groupedPosts.map(group => {
       // Filter URLs to only include those with matching domains
       const filteredUrls = group.urls.filter(url => 

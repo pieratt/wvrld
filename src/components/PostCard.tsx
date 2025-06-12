@@ -18,6 +18,8 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
   const { isSaved, toggleSave, batchToggleSave } = useSavedURLsContext()
   const { isVisited, markAsVisited } = useVisitedURLsContext()
   
+
+  
   // Get system user (User ID 1) for default colors
   const { data: systemUser } = useSWR('/api/users/id/1', fetcher)
   
@@ -147,7 +149,7 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
               
               return (
                 <div 
-                  key={urlData.id} 
+                  key={`${urlData.id}-${urlData.post.id}-${index}`} 
                   className={`url-row grid grid-cols-[1fr_auto_auto] gap-3 items-center ${visited ? 'opacity-50' : ''}`}
                   style={rowStyle}
                 >
