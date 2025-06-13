@@ -14,13 +14,13 @@ export default function PageLayout({ sidebar, children, style, className = "" }:
       className={className}
     >
       <main className="main-grid">
-        <section>
-          {children}
-        </section>
-        
         <aside className="sticky top-0 h-screen pt-0">
           {sidebar}
         </aside>
+        
+        <section>
+          {children}
+        </section>
       </main>
     </div>
   )

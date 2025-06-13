@@ -26,7 +26,7 @@ export default function OverlayNav() {
       }}
     >
       <Link href="/" className="hover:underline">
-        LAST PEOPLE
+        WVRLD
       </Link>
       
       <Link href="/saved" className="hover:underline">

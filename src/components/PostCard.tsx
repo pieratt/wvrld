@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { GroupedPost } from '@/hooks/useGroupedPosts'
 import { useSavedURLsContext } from '@/contexts/SavedURLsContext'
 import { useVisitedURLsContext } from '@/contexts/VisitedURLsContext'
-import useSWR from 'swr'
 
 type PostCardProps = {
   data: GroupedPost;
@@ -12,25 +11,14 @@ type PostCardProps = {
   pageOwner?: any;
 };
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
 export default function PostCard({ data, isFront = false, pageOwner }: PostCardProps) {
   const { isSaved, toggleSave, batchToggleSave } = useSavedURLsContext()
   const { isVisited, markAsVisited } = useVisitedURLsContext()
   
 
   
-  // Get system user (User ID 1) for default colors
-  const { data: systemUser } = useSWR('/api/users/id/1', fetcher)
-  
-  // Default colors from User ID 1 (system colors)
-  const defaultColors = systemUser ? {
-    color1: systemUser.color1,
-    color2: systemUser.color2
-  } : {
-    color1: '#111111',
-    color2: '#ffffff'
-  }
+  // Use CSS variables for colors (set by page-level components)
+  // No need to fetch system user colors since page sets --c1 and --c2
   
   const handleSave = (url: { id: number; url: string; title: string | null; domain: string | null; }) => {
     toggleSave(url)
@@ -71,9 +59,6 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
     <div className="masonry-item">
       <section 
         className="post-card"
-        style={{
-          color: defaultColors.color1
-        } as React.CSSProperties}
       >
         {/* Post title - moved above username/timestamp row */}
         {data.title && (
@@ -93,9 +78,6 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
             <Link 
               href={`/${data.canonicalOwner.username}`} 
               className="user-pill"
-              style={{
-                color: defaultColors.color1
-              }}
             >
               @{data.canonicalOwner.username}
             </Link>
@@ -134,7 +116,7 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
               const visited = isVisited(urlData.id)
               const saved = isSaved(urlData.id)
               
-              // Use user's colors ONLY when saved, otherwise use default black/white
+              // Use user's colors ONLY when saved, otherwise use CSS variables
               const rowStyle = saved ? {
                 backgroundColor: urlData.post.owner.color1,
                 color: urlData.post.owner.color2,
@@ -142,7 +124,6 @@ export default function PostCard({ data, isFront = false, pageOwner }: PostCardP
                 borderRadius: '0.125rem',
                 margin: '0.05rem 0'
               } : {
-                color: defaultColors.color1,
                 padding: '0.125rem 0.25rem',
                 margin: '0.05rem 0'
               }

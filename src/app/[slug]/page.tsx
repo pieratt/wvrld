@@ -15,6 +15,7 @@ import Link from 'next/link'
 import PageLayout from '@/components/PageLayout'
 import { FeedFiltersProvider, useFeedFilters } from '@/contexts/FeedFilters'
 import { UnifiedSidebar } from '@/components/UnifiedSidebar'
+import { UserBio } from '@/components/UserBio'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -68,11 +69,18 @@ function BucketPageContent({ slug }: { slug: string }) {
     color2: '#eeeeee'
   };
 
-  // Inject system colors for sidebar (not user colors)
+  // Get page colors from the user being viewed
+  const colors = palette({
+    cardOwner: pageOwner,
+    isFront: false,
+    pageOwner
+  });
+
+  // Inject user's colors for the page (not system colors)
   React.useEffect(() => {
-    document.documentElement.style.setProperty('--c1', systemColors.color1)
-    document.documentElement.style.setProperty('--c2', systemColors.color2)
-  }, [systemColors.color1, systemColors.color2])
+    document.documentElement.style.setProperty('--c1', colors.pageFont)
+    document.documentElement.style.setProperty('--c2', colors.pageBg)
+  }, [colors.pageFont, colors.pageBg])
 
   const handlePostAdded = () => {
     // Refresh the posts data
@@ -120,20 +128,28 @@ function BucketPageContent({ slug }: { slug: string }) {
         onPostAdded={handlePostAdded}
       />
       <OverlayNav />
-      <div style={{ paddingTop: '120px' }}>
+      <div 
+        style={{ 
+          paddingTop: '120px',
+          backgroundColor: colors.pageBg,
+          color: colors.pageFont,
+          minHeight: '100vh'
+        }}
+      >
         <PageLayout
           sidebar={
             <UnifiedSidebar 
               bucket={slug}
-              userInfo={{
-                title: actualUser.title,
-                username: actualUser.username,
-                description: actualUser.description,
-                stats: actualUser.stats
-              }}
             />
           }
         >
+          <UserBio
+            title={actualUser.title}
+            username={actualUser.username}
+            description={actualUser.description}
+            stats={actualUser.stats}
+            showEditLink={true}
+          />
           {filteredPosts && filteredPosts.length > 0 ? (
             filteredPosts.map((groupedPost) => (
               <PostCard

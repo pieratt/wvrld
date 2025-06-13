@@ -12,6 +12,7 @@ import { UnifiedSidebar } from '@/components/UnifiedSidebar'
 import { FeedFiltersProvider, useFeedFilters } from '@/contexts/FeedFilters'
 import { palette, getUser } from '@/lib/palette'
 import PageLayout from '@/components/PageLayout'
+import { UserBio } from '@/components/UserBio'
 import { useEffect } from 'react'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -69,10 +70,30 @@ function Feed() {
         onPostAdded={handlePostAdded}
       />
       <OverlayNav />
-      <div style={{ paddingTop: '120px' }}>
+      <div 
+        style={{ 
+          paddingTop: '120px',
+          backgroundColor: colors.pageBg,
+          color: colors.pageFont,
+          minHeight: '100vh'
+        }}
+      >
         <PageLayout 
           sidebar={<UnifiedSidebar />}
         >
+          <UserBio
+            title={systemUser.title}
+            username={systemUser.username}
+            description={systemUser.description}
+            stats={{
+              totalPosts: filteredPosts.length,
+              totalURLs: filteredPosts.reduce((sum, post) => sum + post.urls.length, 0),
+              uniqueDomains: new Set(filteredPosts.flatMap(post => 
+                post.urls.map(url => url.domain).filter(Boolean)
+              )).size
+            }}
+            showEditLink={false}
+          />
           {filteredPosts.map((group) => (
             <PostCard
               key={`${group.canonicalOwner.username}-${group.title}`}

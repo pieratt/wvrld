@@ -65,7 +65,7 @@ body {
 /* Base layout grid */
 .main-grid {
   display: grid;
-  grid-template-columns: 500px 200px;
+  grid-template-columns: 200px 500px;
   gap: 0.5rem;
   max-width: 710px;
   margin: 0 auto;
@@ -74,7 +74,7 @@ body {
 
 @media (max-width: 1024px) {
   .main-grid {
-    grid-template-columns: 1fr 200px;
+    grid-template-columns: 200px 1fr;
     max-width: 100%;
   }
 }

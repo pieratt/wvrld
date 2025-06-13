@@ -63,8 +63,8 @@ export default function PostPage({ params }: PostPageProps) {
     posts: [{
       id: post.id,
       title: post.title,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       owner: pageOwner
     }],
     urls: post.urls.map((url: any) => ({
@@ -72,8 +72,8 @@ export default function PostPage({ params }: PostPageProps) {
       post: {
         id: post.id,
         title: post.title,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         owner: pageOwner
       }
     }))
@@ -98,6 +98,13 @@ export default function PostPage({ params }: PostPageProps) {
 
   return (
     <PageLayout
+      style={{
+        '--c1': colors.pageFont,
+        '--c2': colors.pageBg,
+        backgroundColor: 'var(--c2)',
+        color: 'var(--c1)',
+        minHeight: '100vh',
+      } as React.CSSProperties}
       sidebar={sidebar}
     >
       <PostCard

@@ -10,20 +10,9 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 interface UnifiedSidebarProps {
   // Optional bucket filtering - if provided, only shows data for that bucket
   bucket?: string;
-  // Optional user info for bucket pages
-  userInfo?: {
-    title: string | null;
-    username: string;
-    description: string | null;
-    stats: {
-      totalPosts: number;
-      totalURLs: number;
-      uniqueDomains: number;
-    };
-  };
 }
 
-export function UnifiedSidebar({ bucket, userInfo }: UnifiedSidebarProps) {
+export function UnifiedSidebar({ bucket }: UnifiedSidebarProps) {
   const { tlds, toggleTld } = useFeedFilters();
   
   // Fetch data based on whether we're on a bucket page or front page
@@ -80,24 +69,6 @@ export function UnifiedSidebar({ bucket, userInfo }: UnifiedSidebarProps) {
 
   return (
     <div className="space-y-4">
-      {/* User Info Section (for bucket pages) */}
-      {userInfo && (
-        <div className="space-y-2">
-          <h1>{userInfo.title || userInfo.username}</h1>
-          {userInfo.description && (
-            <p className="meta-text">{userInfo.description}</p>
-          )}
-          <div className="meta-text">
-            <div>{userInfo.stats.totalURLs} URLs</div>
-            <div>{userInfo.stats.uniqueDomains} domains</div>
-            <div>{userInfo.stats.totalPosts} posts</div>
-          </div>
-          <Link href={`/${userInfo.username}/edit`} className="hover:underline">
-            edit bucket
-          </Link>
-        </div>
-      )}
-
       {/* TLDs Section */}
       <div className="filter-card">
         <div className="mb-4">
