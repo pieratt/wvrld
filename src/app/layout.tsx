@@ -1,7 +1,6 @@
 import './globals.css';
 import { SavedURLsProvider } from '@/contexts/SavedURLsContext';
 import { VisitedURLsProvider } from '@/contexts/VisitedURLsContext';
-import Header from '@/components/Header';
 import { palette } from '@/lib/palette';
 
 export default function RootLayout({
@@ -20,7 +19,6 @@ export default function RootLayout({
       <body>
         <SavedURLsProvider>
           <VisitedURLsProvider>
-            <Header />
             {children}
           </VisitedURLsProvider>
         </SavedURLsProvider>

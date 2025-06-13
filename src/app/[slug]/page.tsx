@@ -3,6 +3,8 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 import PostCard from '@/components/PostCard'
+import AddPostInput from '@/components/AddPostInput'
+import OverlayNav from '@/components/OverlayNav'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import { palette } from '@/lib/palette'
@@ -22,7 +24,7 @@ interface BucketPageProps {
 
 function BucketPageContent({ slug }: { slug: string }) {
   const { data: user, error: userError } = useSWR<UserWithStats>(`/api/users/${slug}`, fetcher)
-  const { data: posts, error: postsError, isLoading } = useSWR<PostWithURLs[]>(`/api/posts?bucket=${slug}`, fetcher)
+  const { data: posts, error: postsError, isLoading, mutate } = useSWR<PostWithURLs[]>(`/api/posts?bucket=${slug}`, fetcher)
   const { tlds } = useFeedFilters()
   const groupedPosts = useGroupedPosts(posts)
   const filteredPosts = useFilteredGroupedPosts(groupedPosts, tlds)
@@ -72,6 +74,11 @@ function BucketPageContent({ slug }: { slug: string }) {
     document.documentElement.style.setProperty('--c2', systemColors.color2)
   }, [systemColors.color1, systemColors.color2])
 
+  const handlePostAdded = () => {
+    // Refresh the posts data
+    mutate()
+  }
+
   // Handle user not found
   if (userError && userError.status === 404) {
     notFound()
@@ -103,39 +110,52 @@ function BucketPageContent({ slug }: { slug: string }) {
   const actualUser = user!; // Safe to use since we've already checked if user exists
 
   return (
-    <PageLayout
-      sidebar={
-        <UnifiedSidebar 
-          bucket={slug}
-          userInfo={{
-            title: actualUser.title,
-            username: actualUser.username,
-            description: actualUser.description,
-            stats: actualUser.stats
-          }}
-        />
-      }
-    >
-      {filteredPosts && filteredPosts.length > 0 ? (
-        filteredPosts.map((groupedPost) => (
-          <PostCard
-            key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
-            data={groupedPost}
-            isFront={false}
-            pageOwner={{
-              id: actualUser.id,
-              username: actualUser.username,
-              title: actualUser.title,
-              color1: actualUser.color1,
-              color2: actualUser.color2,
-              type: actualUser.type || 'user'
-            }}
-          />
-        ))
-      ) : (
-        <div>This bucket is empty</div>
-      )}
-    </PageLayout>
+    <>
+      <AddPostInput 
+        bucketSlug={slug}
+        userColors={{
+          color1: actualUser.color1,
+          color2: actualUser.color2
+        }}
+        onPostAdded={handlePostAdded}
+      />
+      <OverlayNav />
+      <div style={{ paddingTop: '120px' }}>
+        <PageLayout
+          sidebar={
+            <UnifiedSidebar 
+              bucket={slug}
+              userInfo={{
+                title: actualUser.title,
+                username: actualUser.username,
+                description: actualUser.description,
+                stats: actualUser.stats
+              }}
+            />
+          }
+        >
+          {filteredPosts && filteredPosts.length > 0 ? (
+            filteredPosts.map((groupedPost) => (
+              <PostCard
+                key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
+                data={groupedPost}
+                isFront={false}
+                pageOwner={{
+                  id: actualUser.id,
+                  username: actualUser.username,
+                  title: actualUser.title,
+                  color1: actualUser.color1,
+                  color2: actualUser.color2,
+                  type: actualUser.type || 'user'
+                }}
+              />
+            ))
+          ) : (
+            <div>This bucket is empty</div>
+          )}
+        </PageLayout>
+      </div>
+    </>
   )
 }
 

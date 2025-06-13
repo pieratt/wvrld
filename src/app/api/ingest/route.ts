@@ -68,53 +68,81 @@ export async function POST(request: NextRequest): Promise<NextResponse<IngestRes
 }
 
 async function handleCreate(body: IngestRequest): Promise<NextResponse<IngestResponse>> {
-  // 1. Find or create bucket user
-  let user = await prisma.user.findUnique({
-    where: { username: body.slug }
-  })
-
-  if (!user) {
-    // Create new user/bucket
-    user = await prisma.user.create({
-      data: {
-        username: body.slug,
-        color1: generateRandomColor(),
-        color2: generateRandomColor(),
-        type: 'user'
-      }
-    })
-  }
-
-  // 2. Parse the prompt
+  // 1. Parse the prompt first to check for @username mentions
   const parsed = parsePrompt(body.rawText)
 
-  // 3. Create prompt record
+  // 2. Determine target users - use mentions if available, otherwise use bucket
+  let targetUsernames: string[] = []
+  
+  if (parsed.mentions.length > 0) {
+    // Use mentioned usernames
+    targetUsernames = parsed.mentions
+  } else {
+    // Fall back to bucket slug
+    targetUsernames = [body.slug]
+  }
+
+  // 3. Find or create all target users
+  const targetUsers = []
+  for (const username of targetUsernames) {
+    // Validate username format (same as slug validation)
+    if (!/^[a-z0-9_-]{1,32}$/.test(username)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid username format: @${username}` },
+        { status: 400 }
+      )
+    }
+
+    let user = await prisma.user.findUnique({
+      where: { username }
+    })
+
+    if (!user) {
+      // Create new user/bucket
+      user = await prisma.user.create({
+        data: {
+          username,
+          color1: generateRandomColor(),
+          color2: generateRandomColor(),
+          type: 'user'
+        }
+      })
+    }
+    targetUsers.push(user)
+  }
+
+  // 4. Create prompt record (using first target user)
   const prompt = await prisma.prompt.create({
     data: {
       rawText: body.rawText,
-      userId: user.id
+      userId: targetUsers[0].id
     }
   })
 
-  // 4. Create post
-  const post = await prisma.post.create({
-    data: {
-      ownerId: user.id,
-      promptId: prompt.id,
-      title: parsed.title || null
-    }
-  })
+  // 5. Create posts for each target user
+  const createdPosts = []
+  for (const user of targetUsers) {
+    const post = await prisma.post.create({
+      data: {
+        ownerId: user.id,
+        promptId: prompt.id,
+        title: parsed.title || null
+      }
+    })
 
-  // 5. Process URLs
-  if (parsed.urls.length > 0) {
-    await processURLs(parsed.urls, post.id)
+    // Process URLs for this post
+    if (parsed.urls.length > 0) {
+      await processURLs(parsed.urls, post.id)
+    }
+
+    createdPosts.push(post)
   }
 
   return NextResponse.json({
     success: true,
     data: {
-      userId: user.id,
-      postId: post.id,
+      userId: targetUsers[0].id,
+      postId: createdPosts[0].id,
       promptId: prompt.id
     }
   })

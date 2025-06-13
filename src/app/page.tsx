@@ -1,8 +1,9 @@
 'use client'
 
-import Header from '@/components/Header'
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
 import PostCard from '@/components/PostCard'
+import AddPostInput from '@/components/AddPostInput'
+import OverlayNav from '@/components/OverlayNav'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import useSWR from 'swr'
@@ -16,13 +17,11 @@ import { useEffect } from 'react'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 function Feed() {
-  const { data: posts, error: postsError, isLoading: postsLoading } = useSWR<PostWithURLs[]>('/api/posts', fetcher)
+  const { data: posts, error: postsError, isLoading: postsLoading, mutate } = useSWR<PostWithURLs[]>('/api/posts', fetcher)
   const { data: systemUser, error: userError, isLoading: userLoading } = useSWR('/api/users/id/1', fetcher)
   const { tlds } = useFeedFilters()
   const groupedPosts = useGroupedPosts(posts)
   const filteredPosts = useFilteredGroupedPosts(groupedPosts, tlds)
-
-
 
   // Get system user colors for front page from database (with fallback for loading state)
   const colors = systemUser ? palette({
@@ -51,21 +50,39 @@ function Feed() {
     document.documentElement.style.setProperty('--c2', colors.pageBg)
   }, [colors.pageFont, colors.pageBg])
 
+  const handlePostAdded = () => {
+    // Refresh the posts data
+    mutate()
+  }
+
   if (postsError || userError) return <div>Failed to load</div>
   if (postsLoading || userLoading || !posts || !systemUser) return <div>Loading...</div>
 
   return (
-    <PageLayout 
-      sidebar={<UnifiedSidebar />}
-    >
-      {filteredPosts.map((group) => (
-        <PostCard
-          key={`${group.canonicalOwner.username}-${group.title}`}
-          data={group}
-          isFront={true}
-        />
-      ))}
-    </PageLayout>
+    <>
+      <AddPostInput 
+        bucketSlug="anonymous"
+        userColors={{
+          color1: systemUser.color1,
+          color2: systemUser.color2
+        }}
+        onPostAdded={handlePostAdded}
+      />
+      <OverlayNav />
+      <div style={{ paddingTop: '120px' }}>
+        <PageLayout 
+          sidebar={<UnifiedSidebar />}
+        >
+          {filteredPosts.map((group) => (
+            <PostCard
+              key={`${group.canonicalOwner.username}-${group.title}`}
+              data={group}
+              isFront={true}
+            />
+          ))}
+        </PageLayout>
+      </div>
+    </>
   )
 }
 

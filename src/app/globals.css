@@ -15,6 +15,52 @@
   opacity: 70%;
 }
 
+/* CLI Interface Styles */
+.cli-container {
+  box-sizing: border-box;
+}
+
+.cli-input {
+  box-sizing: border-box;
+}
+
+.cli-input:focus {
+  outline: none;
+}
+
+.cli-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Hide scrollbars for webkit browsers */
+.cli-input::-webkit-scrollbar {
+  display: none;
+}
+
+.cli-status {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Adjust body to account for CLI */
+body {
+  background: var(--c2, white);
+  color: var(--c1, var(--foreground));
+  font-family: 'DM Sans', sans-serif;
+  padding-top: 0; /* CLI handles its own spacing */
+}
+
 /* Remove any existing complex styles */
 /* Base layout grid */
 .main-grid {
@@ -61,10 +107,42 @@ button {
   }
 }
 
-body {
-  background: var(--c2, white);
-  color: var(--c1, var(--foreground));
-  font-family: 'DM Sans', sans-serif;
+/* Add Post Input Styles - Legacy, can be removed */
+.add-post-input-container {
+  transition: all 0.2s ease-in-out;
+}
+
+.add-post-input {
+  transition: all 0.2s ease-in-out;
+}
+
+.add-post-input::placeholder {
+  opacity: 0.6;
+}
+
+.add-post-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.add-post-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.status-message {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .post-card {

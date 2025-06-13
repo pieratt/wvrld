@@ -1,22 +1,24 @@
 export interface ParsedPrompt {
   title?: string
   urls: string[]
+  mentions: string[]
 }
 
 /**
- * Parses user input to extract title and URLs
+ * Parses user input to extract title, URLs, and @username mentions
  * 
  * Format:
  * - First non-URL line becomes the title (optional)
  * - All valid URLs are extracted in order
+ * - @username mentions are extracted from anywhere in the text
  * - Invalid lines are ignored
  * 
  * @param rawText - The raw user input
- * @returns Object with optional title and array of valid URLs
+ * @returns Object with optional title, array of valid URLs, and array of mentioned usernames
  */
 export function parsePrompt(rawText: string): ParsedPrompt {
   if (!rawText || typeof rawText !== 'string') {
-    return { urls: [] }
+    return { urls: [], mentions: [] }
   }
 
   const lines = rawText
@@ -25,23 +27,40 @@ export function parsePrompt(rawText: string): ParsedPrompt {
     .filter(line => line.length > 0)
 
   if (lines.length === 0) {
-    return { urls: [] }
+    return { urls: [], mentions: [] }
   }
 
   let title: string | undefined
   const urls: string[] = []
+  const mentions: string[] = []
 
+  // Extract @username mentions from the entire text
+  const mentionRegex = /@([a-z0-9_-]+)/gi
+  const allMatches = rawText.matchAll(mentionRegex)
+  for (const match of allMatches) {
+    const username = match[1].toLowerCase()
+    if (!mentions.includes(username)) {
+      mentions.push(username)
+    }
+  }
+
+  // Process lines for title and URLs
   for (const line of lines) {
     if (isValidURL(line)) {
       urls.push(canonicalizeURL(line))
     } else if (!title) {
       // First non-URL line becomes the title
-      title = line
+      // Remove @mentions from title display but keep the mentions array
+      title = line.replace(/@[a-z0-9_-]+/gi, '').trim()
+      // Only use as title if there's still content after removing mentions
+      if (!title) {
+        title = undefined
+      }
     }
     // Subsequent non-URL lines are ignored
   }
 
-  const result: ParsedPrompt = { urls }
+  const result: ParsedPrompt = { urls, mentions }
   if (title) {
     result.title = title
   }

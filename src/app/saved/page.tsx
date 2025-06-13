@@ -5,6 +5,8 @@ import { useSavedURLsContext } from '@/contexts/SavedURLsContext'
 import { palette, getUser } from '@/lib/palette'
 import PageLayout from '@/components/PageLayout'
 import PostCard from '@/components/PostCard'
+import AddPostInput from '@/components/AddPostInput'
+import OverlayNav from '@/components/OverlayNav'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import useSWR from 'swr'
 import { URLWithPost } from '../api/urls/route'
@@ -36,7 +38,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function SavedPage() {
   const { savedURLs, isLoading: savedLoading } = useSavedURLsContext()
-  const { data: allUrls, isLoading: urlsLoading } = useSWR<URLWithPost[]>('/api/urls', fetcher)
+  const { data: allUrls, isLoading: urlsLoading, mutate } = useSWR<URLWithPost[]>('/api/urls', fetcher)
   const { data: systemUser, isLoading: userLoading } = useSWR('/api/users/id/1', fetcher)
 
   // Get system user colors for saved page from database (with fallback for loading state)
@@ -65,6 +67,11 @@ export default function SavedPage() {
     document.documentElement.style.setProperty('--c1', colors.pageFont)
     document.documentElement.style.setProperty('--c2', colors.pageBg)
   }, [colors.pageFont, colors.pageBg])
+
+  const handlePostAdded = () => {
+    // Refresh the URLs data
+    mutate()
+  }
 
   if (!systemUser) return <div>Loading...</div>
 
@@ -136,20 +143,33 @@ export default function SavedPage() {
   )
 
   return (
-    <PageLayout
-      sidebar={sidebar}
-    >
-      {groupedPosts.length > 0 ? (
-        groupedPosts.map((groupedPost) => (
-          <PostCard
-            key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
-            data={groupedPost}
-            isFront={true}
-          />
-        ))
-      ) : (
-        <div>No saved URLs yet</div>
-      )}
-    </PageLayout>
+    <>
+      <AddPostInput 
+        bucketSlug="anonymous"
+        userColors={{
+          color1: systemUser.color1,
+          color2: systemUser.color2
+        }}
+        onPostAdded={handlePostAdded}
+      />
+      <OverlayNav />
+      <div style={{ paddingTop: '120px' }}>
+        <PageLayout
+          sidebar={sidebar}
+        >
+          {groupedPosts.length > 0 ? (
+            groupedPosts.map((groupedPost) => (
+              <PostCard
+                key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
+                data={groupedPost}
+                isFront={true}
+              />
+            ))
+          ) : (
+            <div>No saved URLs yet</div>
+          )}
+        </PageLayout>
+      </div>
+    </>
   )
 } 
