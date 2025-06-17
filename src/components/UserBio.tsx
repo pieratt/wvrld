@@ -17,21 +17,21 @@ interface UserBioProps {
 export function UserBio({ title, username, description, stats, showEditLink = true }: UserBioProps) {
   return (
     <div className="space-y-2 mb-6">
-      <h1 className="post-title text-xl font-medium leading-tight">
+      <h1 className="type-large">
         {title || username}
       </h1>
       {description && (
-        <p className="post-title text-xl font-medium leading-tight">
+        <p className="type-large">
           {description}
         </p>
       )}
-      <div className="meta-text flex gap-4">
+      <div className="type-small state-inactive flex gap-4">
         <span>{stats.totalURLs} URLs</span>
         <span>{stats.uniqueDomains} domains</span>
         <span>{stats.totalPosts} posts</span>
       </div>
       {showEditLink && (
-        <Link href={`/${username}/edit`} className="hover:underline">
+        <Link href={`/${username}/edit`} className="type-small hover:underline">
           edit bucket
         </Link>
       )}

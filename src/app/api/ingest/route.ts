@@ -282,6 +282,30 @@ async function processURLs(urls: string[], postId: number): Promise<void> {
       }
     })
   }
+
+  // Trigger metadata processing asynchronously (don't wait for completion)
+  // This ensures URLs don't stay in PENDING status
+  if (urls.length > 0) {
+    triggerMetadataProcessing().catch(error => {
+      console.error('Background metadata processing failed:', error)
+    })
+  }
+}
+
+// Helper function to trigger metadata processing
+async function triggerMetadataProcessing(): Promise<void> {
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+    await fetch(`${baseUrl}/api/metadata`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  } catch (error) {
+    // Silently fail - don't block the main request
+    console.error('Failed to trigger metadata processing:', error)
+  }
 }
 
 function extractDomain(url: string): string {

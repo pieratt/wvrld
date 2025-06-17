@@ -1,33 +1,54 @@
 'use client';
 
 import { useFeedFilters } from '@/contexts/FeedFilters';
-import { palette, getUser } from '@/lib/palette';
 import useSWR from 'swr';
-import { URLWithPost } from '@/app/api/urls/route';
 import { PostWithURLs } from '@/app/api/posts/route';
+import Link from 'next/link';
+import { cleanDomain } from '@/lib/utils'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function DomainFilterBar() {
+interface DomainFilterBarProps {
+  // Optional bucket filtering - if provided, only shows data for that bucket
+  bucket?: string;
+}
+
+export function DomainFilterBar({ bucket }: DomainFilterBarProps) {
   const { tlds, toggleTld } = useFeedFilters();
-  const { data: urls } = useSWR<URLWithPost[]>('/api/urls', fetcher);
-  const { data: systemUser } = useSWR('/api/users/id/1', fetcher);
-  const { data: posts } = useSWR<PostWithURLs[]>('/api/posts', fetcher);
   
-  // Calculate domain counts from actual data (deduplicating URLs)
-  const uniqueUrls = urls?.reduce((acc: {url: string, domain: string}[], urlData) => {
-    if (urlData.domain && !acc.some(u => u.url === urlData.url)) {
-      acc.push({url: urlData.url, domain: urlData.domain});
-    }
+  // Fetch data based on whether we're on a bucket page or front page
+  const postsUrl = bucket ? `/api/posts?bucket=${bucket}` : '/api/posts';
+  const { data: posts } = useSWR<PostWithURLs[]>(postsUrl, fetcher);
+  
+  // Calculate domain counts from posts data (counting unique URLs per domain)
+  const domainCounts = posts?.reduce((acc, post) => {
+    // Track unique URLs to avoid double counting
+    const seenUrls = new Set<string>();
+    post.urls.forEach(url => {
+      if (url.domain && !seenUrls.has(url.url)) {
+        seenUrls.add(url.url);
+        acc[url.domain] = (acc[url.domain] || 0) + 1;
+      }
+    });
+    return acc;
+  }, {} as Record<string, number>) || {};
+  
+  // Further deduplicate across all posts to get truly unique URL counts per domain
+  const allUniqueUrls = posts?.reduce((acc: {url: string, domain: string}[], post) => {
+    post.urls.forEach(url => {
+      if (url.domain && !acc.some(u => u.url === url.url)) {
+        acc.push({url: url.url, domain: url.domain});
+      }
+    });
     return acc;
   }, []) || [];
   
-  const domainCounts = uniqueUrls.reduce((acc, urlInfo) => {
+  const uniqueDomainCounts = allUniqueUrls.reduce((acc, urlInfo) => {
     acc[urlInfo.domain] = (acc[urlInfo.domain] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const domains = Object.entries(domainCounts)
+  const domains = Object.entries(uniqueDomainCounts)
     .map(([domain, count]) => ({ domain, count }))
     .sort((a, b) => b.count - a.count);
 
@@ -45,65 +66,69 @@ export function DomainFilterBar() {
     Array.from(tlds).forEach(domain => toggleTld(domain));
   };
 
-  if (!urls || !systemUser) return <div>Loading filters...</div>;
+  if (!posts) return <div>Loading filters...</div>;
 
   return (
-    <div className="filter-card">
-      {/* TLDs Section */}
+    <div className="space-y-4">
+      {/* Domains */}
       <div className="mb-4">
-        <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-          TLDs
-        </h3>
+        <h3 className="type-small">Domains</h3>
         <nav className="tld-list">
+          <div>
+            <button 
+              onClick={clearAllFilters}
+              className="type-small text-left block w-full hover:underline"
+            >
+              Show all
+            </button>
+          </div>
+
           {domains.slice(0, 10).map(({ domain, count }) => {
             const on = tlds.has(domain);
+            
             return (
-              <button
+              <button 
                 key={domain}
                 className={`tld-pill${!on ? ' off' : ''}`}
-                style={{ padding: '0.25rem 0.75rem', marginBottom: '0.1rem' }}
                 onClick={() => toggleTld(domain)}
               >
-                {domain} <span className="meta-text">{count}</span>
+                {cleanDomain(domain)} <span className="state-inactive">{count}</span>
               </button>
             );
           })}
-          
-          {tlds.size > 0 && (
-            <div className="pt-1">
-              <button 
-                onClick={clearAllFilters}
-                className="w-full text-left meta-text hover:underline px-3 py-1"
-              >
-                clear all
-              </button>
-            </div>
-          )}
         </nav>
       </div>
 
-      {/* Editors Section */}
-      <div>
-        <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-          Editors
-        </h3>
+      {/* Editors */}
+      <div className="mb-4">
+        <h3 className="type-small">Editors</h3>
         <nav className="editors-list">
           {uniqueUsers.map((user) => (
-            <a
+            <Link
               key={user.id}
               href={`/${user.username}`}
-              className="editor-pill"
-              style={{ 
-                padding: '0.25rem 0.75rem', 
-                marginBottom: '0.1rem',
-                fontSize: '14px',
+              className="user-link type-small"
+              style={{
                 '--user-color1': user.color1,
-                '--user-color2': user.color2
+                '--user-color2': user.color2,
               } as React.CSSProperties}
             >
               @{user.username}
-            </a>
+            </Link>
           ))}
+        </nav>
+      </div>
+
+      {/* Meta */}
+      <div>
+        <h3 className="type-small">Stats</h3>
+        <nav className="meta-list">
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {posts?.length || 0} posts
+          </div>
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {allUniqueUrls.length} urls
+          </div>
         </nav>
       </div>
     </div>

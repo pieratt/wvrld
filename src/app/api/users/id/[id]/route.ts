@@ -90,4 +90,64 @@ export async function GET(
       { status: 500 }
     )
   }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<{ success: boolean } | { error: string }>> {
+  try {
+    const { id } = await params
+    const userId = parseInt(id, 10)
+
+    if (isNaN(userId)) {
+      return NextResponse.json(
+        { error: 'Invalid user ID' },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const { color1, color2 } = body
+
+    // Validate hex colors
+    const hexColorRegex = /^#[0-9A-F]{6}$/i
+    if (color1 && !hexColorRegex.test(color1)) {
+      return NextResponse.json(
+        { error: 'Invalid color1 format. Must be hex format like #FF0000' },
+        { status: 400 }
+      )
+    }
+    if (color2 && !hexColorRegex.test(color2)) {
+      return NextResponse.json(
+        { error: 'Invalid color2 format. Must be hex format like #FF0000' },
+        { status: 400 }
+      )
+    }
+
+    // Update user colors
+    const updateData: { color1?: string; color2?: string } = {}
+    if (color1) updateData.color1 = color1
+    if (color2) updateData.color2 = color2
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData
+    })
+
+    if (!updatedUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('User color update error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 } 

@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "process-metadata": "node scripts/process-metadata.js"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",

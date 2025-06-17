@@ -4,6 +4,7 @@ import { useFeedFilters } from '@/contexts/FeedFilters';
 import useSWR from 'swr';
 import { PostWithURLs } from '@/app/api/posts/route';
 import Link from 'next/link';
+import { cleanDomain } from '@/lib/utils'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -70,82 +71,78 @@ export function UnifiedSidebar({ bucket }: UnifiedSidebarProps) {
   return (
     <div className="space-y-4">
       {/* TLDs Section */}
-      <div className="filter-card">
-        <div className="mb-4">
-          <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-            TLDs
-          </h3>
-          <nav className="tld-list">
-            {domains.slice(0, 10).map(({ domain, count }) => {
-              const on = tlds.has(domain);
-              return (
-                <button
-                  key={domain}
-                  className={`tld-pill${!on ? ' off' : ''}`}
-                  style={{ padding: '0.25rem 0.75rem', marginBottom: '0.1rem' }}
-                  onClick={() => toggleTld(domain)}
-                >
-                  {domain} <span className="meta-text">{count}</span>
-                </button>
-              );
-            })}
-            
-            {tlds.size > 0 && (
-              <div className="pt-1">
-                <button 
-                  onClick={clearAllFilters}
-                  className="w-full text-left meta-text hover:underline px-3 py-1"
-                >
-                  clear all
-                </button>
-              </div>
-            )}
-          </nav>
-        </div>
+      <section className="filter-card">
+        <h3 className="type-small">Filters</h3>
+        
+        <div className="tld-list">
+          <div className="meta-list">
+            <button 
+              onClick={clearAllFilters}
+              className="type-small text-left block w-full hover:underline"
+            >
+              Show all
+            </button>
+          </div>
 
-        {/* Editors Section */}
-        <div className="mb-4">
-          <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-            Editors
-          </h3>
-          <nav className="editors-list">
-            {uniqueUsers.map((user) => (
-              <a
+          {domains.slice(0, 10).map(({ domain, count }) => {
+            const on = tlds.has(domain);
+            
+            return (
+              <button 
+                key={domain}
+                className={`type-small text-left block w-full hover:underline ${on ? '' : 'state-inactive'}`}
+                onClick={() => toggleTld(domain)}
+              >
+                {cleanDomain(domain)} <span className="state-inactive">{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Editors Section */}
+      <section className="filter-card">
+        <h3 className="type-small">Editors</h3>
+        
+        <div className="editors-list">
+          {uniqueUsers && uniqueUsers.length > 0 ? (
+            uniqueUsers.slice(0, 10).map((user) => (
+              <Link 
                 key={user.id}
                 href={`/${user.username}`}
-                className="editor-pill"
-                style={{ 
-                  padding: '0.25rem 0.75rem', 
-                  marginBottom: '0.1rem',
-                  fontSize: '14px',
+                className="user-link type-small"
+                style={{
                   '--user-color1': user.color1,
-                  '--user-color2': user.color2
+                  '--user-color2': user.color2,
                 } as React.CSSProperties}
               >
                 @{user.username}
-              </a>
-            ))}
-          </nav>
+              </Link>
+            ))
+          ) : (
+            <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+              No editors available
+            </div>
+          )}
         </div>
+      </section>
 
-        {/* Meta Section */}
-        <div>
-          <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-            Meta
-          </h3>
-          <nav className="meta-list">
-            <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {posts.length} posts
-            </div>
-            <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {Object.keys(uniqueDomainCounts).length} domains
-            </div>
-            <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {posts.reduce((sum, post) => sum + post.urls.length, 0)} URLs
-            </div>
-          </nav>
+      {/* Meta Section */}
+      <section className="filter-card">
+        <h3 className="type-small">Stats</h3>
+        
+        <div className="meta-list">
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {posts?.length || 0} posts
+          </div>
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {allUniqueUrls.length} urls
+          </div>
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {Object.keys(uniqueDomainCounts).length} domains
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 } 

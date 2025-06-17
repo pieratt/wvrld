@@ -4,7 +4,7 @@ import React from 'react'
 import { notFound } from 'next/navigation'
 import PostCard from '@/components/PostCard'
 import AddPostInput from '@/components/AddPostInput'
-import OverlayNav from '@/components/OverlayNav'
+
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import { palette } from '@/lib/palette'
@@ -127,22 +127,13 @@ function BucketPageContent({ slug }: { slug: string }) {
         }}
         onPostAdded={handlePostAdded}
       />
-      <OverlayNav />
-      <div 
-        style={{ 
-          paddingTop: '120px',
-          backgroundColor: colors.pageBg,
-          color: colors.pageFont,
-          minHeight: '100vh'
-        }}
-      >
-        <PageLayout
-          sidebar={
-            <UnifiedSidebar 
-              bucket={slug}
-            />
-          }
-        >
+      <PageLayout
+        sidebar={
+          <UnifiedSidebar 
+            bucket={slug}
+          />
+        }
+        metaHeader={
           <UserBio
             title={actualUser.title}
             username={actualUser.username}
@@ -150,27 +141,28 @@ function BucketPageContent({ slug }: { slug: string }) {
             stats={actualUser.stats}
             showEditLink={true}
           />
-          {filteredPosts && filteredPosts.length > 0 ? (
-            filteredPosts.map((groupedPost) => (
-              <PostCard
-                key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
-                data={groupedPost}
-                isFront={false}
-                pageOwner={{
-                  id: actualUser.id,
-                  username: actualUser.username,
-                  title: actualUser.title,
-                  color1: actualUser.color1,
-                  color2: actualUser.color2,
-                  type: actualUser.type || 'user'
-                }}
-              />
-            ))
-          ) : (
-            <div>This bucket is empty</div>
-          )}
-        </PageLayout>
-      </div>
+        }
+      >
+        {filteredPosts && filteredPosts.length > 0 ? (
+          filteredPosts.map((groupedPost) => (
+            <PostCard
+              key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
+              data={groupedPost}
+              isFront={false}
+              pageOwner={{
+                id: actualUser.id,
+                username: actualUser.username,
+                title: actualUser.title,
+                color1: actualUser.color1,
+                color2: actualUser.color2,
+                type: actualUser.type || 'user'
+              }}
+            />
+          ))
+        ) : (
+          <div>This bucket is empty</div>
+        )}
+      </PageLayout>
     </>
   )
 }

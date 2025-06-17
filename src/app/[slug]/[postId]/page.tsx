@@ -85,7 +85,7 @@ export default function PostPage({ params }: PostPageProps) {
         ← {user.title || user.username}
       </Link>
       
-      <div className="meta-text">
+      <div className="type-small state-inactive">
         <div>Post #{post.id}</div>
         <div>{post.urls.length} URLs</div>
       </div>

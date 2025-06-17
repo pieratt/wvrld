@@ -1,19 +1,94 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&family=Inconsolata:wght@400&display=swap');
 
-:root {
-  --font-size: 14px;
-}
+/* === BRUTALIST TYPOGRAPHY SYSTEM === */
+/* Only two sizes, three states */
 
+/* Base font - Small (Inconsolata 14px Regular) */
 * {
-  font-family: 'DM Sans', sans-serif;
-  font-size: var(--font-size);
+  font-family: 'Inconsolata', monospace;
+  font-size: 14px;
   font-weight: 400;
+  line-height: 1.4;
+  opacity: 1; /* Active state */
 }
 
-.meta-text {
-  opacity: 70%;
+/* Large size - Post Titles only (DM Sans 16px Regular) */
+.type-large {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
 }
+
+/* Small size - Everything else (Inconsolata 14px Regular) - this is the default */
+.type-small {
+  font-family: 'Inconsolata', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* States */
+.state-active {
+  opacity: 1;
+}
+
+.state-inactive {
+  opacity: 0.5;
+}
+
+.state-visited {
+  opacity: 0.5;
+}
+
+/* Post title specific */
+.post-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
+  opacity: 1;
+}
+
+/* Username hover effects with user colors */
+.user-link {
+  transition: all 0.1s ease;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.125rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.user-link:hover {
+  background-color: var(--user-color1);
+  color: var(--user-color2);
+  text-decoration: none;
+}
+
+/* Save button styling */
+.save-button {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.save-button:hover {
+  text-decoration: underline;
+}
+
+/* URL styling */
+.url-title {
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.url-title:hover {
+  text-decoration: underline;
+}
+
+/* === REST OF EXISTING STYLES === */
 
 /* CLI Interface Styles */
 .cli-container {
@@ -55,14 +130,161 @@
 
 /* Adjust body to account for CLI */
 body {
-  background: var(--c2, white);
-  color: var(--c1, var(--foreground));
-  font-family: 'DM Sans', sans-serif;
-  padding-top: 0; /* CLI handles its own spacing */
+  background: var(--c2, #ffffff);
+  color: var(--c1, #000000);
+  font-family: 'Inconsolata', monospace;
+  font-size: 14px;
+  padding-top: 0;
+  min-height: 100vh;
 }
 
-/* Remove any existing complex styles */
-/* Base layout grid */
+/* Ensure all elements inherit the page colors by default */
+* {
+  color: inherit;
+}
+
+/* NEW LAYOUT SYSTEM */
+/* Header above, nav left, feed centered */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: 80px; /* Account for CLI header */
+}
+
+.layout-header {
+  width: 100%;
+  padding: 1rem;
+  padding-left: 1rem; /* Left-aligned */
+  margin-bottom: 1rem;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1;
+}
+
+.left-sidebar {
+  width: 240px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 160px); /* Account for CLI and header */
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the content in viewport */
+  padding: 1rem;
+}
+
+.main-content-inner {
+  width: 100%;
+  max-width: 500px; /* Centered with max width */
+}
+
+/* Perfect left alignment for nav elements */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-nav .filter-card {
+  padding-left: 0; /* Remove left padding for perfect alignment */
+  padding-right: 1.25rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+.sidebar-nav .tld-pill,
+.sidebar-nav .user-link,
+.sidebar-nav .type-small {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.sidebar-nav .user-link {
+  padding-left: 0.25rem; /* Minimal left padding for user links */
+}
+
+/* Bottom navigation in sidebar */
+.sidebar-bottom-nav {
+  margin-top: auto;
+  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 0; /* Perfect left alignment */
+}
+
+.sidebar-bottom-nav a {
+  padding-left: 0; /* Remove left padding */
+  padding-right: 0.75rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Heart SVG component - smaller and lower opacity */
+.heart-button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px; /* Smaller size */
+  height: 14px; /* Smaller size */
+  opacity: 0.3; /* Lower opacity by default */
+  transition: all 0.1s ease;
+}
+
+.heart-button:hover {
+  opacity: 1;
+}
+
+.heart-button.opacity-100 {
+  opacity: 0.8; /* Slightly lower opacity even when saved */
+}
+
+.heart-button svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  transition: transform 0.1s ease;
+}
+
+.heart-button.clicked svg {
+  animation: heartPop 0.3s ease;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3) translateY(-1px); }
+  100% { transform: scale(1); }
+}
+
+/* Perfect left alignment for main content but keep post cards with some padding */
+.post-card {
+  background-color: transparent;
+  color: var(--c1);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  padding-left: 1rem; /* Some left padding for readability */
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
+  margin-bottom: 0.5rem;
+  box-shadow: none;
+}
+
+/* Force left alignment in username column */
+.username-column {
+  text-align: left !important;
+  justify-self: start !important;
+}
+
+/* Legacy main-grid for backwards compatibility */
 .main-grid {
   display: grid;
   grid-template-columns: 200px 500px;
@@ -73,6 +295,31 @@ body {
 }
 
 @media (max-width: 1024px) {
+  .layout-container {
+    padding-top: 80px; /* Keep consistent top padding */
+  }
+  
+  .layout-header {
+    padding: 0.75rem;
+    padding-left: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .left-sidebar {
+    width: 200px; /* Narrower on medium screens */
+    padding: 0.75rem;
+    min-height: calc(100vh - 160px); /* Keep consistent height calculation */
+  }
+  
+  .main-content {
+    padding: 0.75rem;
+    align-items: center; /* Keep centered */
+  }
+  
+  .main-content-inner {
+    max-width: 100%; /* Use available space */
+  }
+  
   .main-grid {
     grid-template-columns: 200px 1fr;
     max-width: 100%;
@@ -80,10 +327,57 @@ body {
 }
 
 @media (max-width: 768px) {
+  .layout-container {
+    padding-top: 80px; /* Keep same as larger screens to prevent jumping */
+  }
+  
+  .layout-header {
+    padding: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .left-sidebar {
+    width: 160px; /* Even narrower on small screens */
+    padding: 0.5rem;
+    min-height: calc(100vh - 140px); /* Adjust for consistent header */
+  }
+  
+  .main-content {
+    padding: 0.5rem;
+    align-items: center; /* Keep centered */
+  }
+  
+  .sidebar-bottom-nav {
+    padding-top: 1rem; /* Less padding on mobile */
+  }
+  
   .main-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
     padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-container {
+    padding-top: 80px; /* Consistent across all sizes */
+  }
+  
+  .left-sidebar {
+    width: 140px; /* Very narrow on very small screens */
+    padding: 0.25rem;
+    min-height: calc(100vh - 140px);
+  }
+  
+  .main-content {
+    padding: 0.25rem;
+    align-items: center; /* Keep centered */
+  }
+  
+  .layout-header {
+    padding: 0.25rem;
+    padding-left: 0.25rem;
   }
 }
 
@@ -107,7 +401,7 @@ button {
   }
 }
 
-/* Add Post Input Styles - Legacy, can be removed */
+/* Add Post Input Styles */
 .add-post-input-container {
   transition: all 0.2s ease-in-out;
 }
@@ -145,43 +439,12 @@ button {
   }
 }
 
-.post-card {
-  background-color: transparent;
-  color: var(--c1);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0rem;
-  margin-bottom: 0.5rem;
-  box-shadow: none;
-}
-
-.post-title {
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
 .post-title-section {
   margin-bottom: 0.25rem;
 }
 
 .urls-section {
   margin-top: 0.125rem;
-}
-
-.url-title {
-  font-family: 'Inconsolata', monospace;
-  font-size: 14px;
-  text-decoration: none;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.url-title:hover {
-  text-decoration: underline;
 }
 
 .meta-link {
@@ -198,7 +461,6 @@ button {
 }
 
 .tld-pill {
-
   border-radius: 0rem;
   padding: 0.5rem 0.75rem;
   width: 100%;
@@ -210,8 +472,9 @@ button {
 }
 
 .tld-pill.off {
-  opacity: .8;
+  opacity: 0.5;
 }
+
 .tld-pill:hover {
   opacity: 0.7;
 }
@@ -267,32 +530,14 @@ button {
   gap: 0.1rem;
 }
 
-.user-pill {
-  display: inline-block;
-  border-radius: 2rem;
-  padding: 0.25rem 0.75rem;
-  font-size: 14px;
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.user-pill:hover {
-  text-decoration: underline;
-}
-
 .editor-pill {
   display: block;
   text-decoration: none;
   cursor: pointer;
   color: inherit;
-}
-
-.editor-pill:hover {
-  background-color: var(--user-color1);
-  color: var(--user-color2);
-  text-decoration: none;
+  padding: 0.25rem 0.75rem;
   border-radius: 0.125rem;
+  transition: all 0.1s ease;
 }
 
 .header-container {

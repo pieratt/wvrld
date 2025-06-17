@@ -62,7 +62,7 @@ export default function UniversalPostPage({ params }: UniversalPostPageProps) {
         ← home
       </Link>
       
-      <div className="meta-text">
+      <div className="type-small state-inactive">
         <div>Universal Post #{postId}</div>
         <div>{targetPost.urls.length} URLs</div>
         <div>{targetPost.posts.length} contributors</div>

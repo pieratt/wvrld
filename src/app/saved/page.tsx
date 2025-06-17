@@ -6,13 +6,13 @@ import { palette, getUser } from '@/lib/palette'
 import PageLayout from '@/components/PageLayout'
 import PostCard from '@/components/PostCard'
 import AddPostInput from '@/components/AddPostInput'
-import OverlayNav from '@/components/OverlayNav'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import { UserBio } from '@/components/UserBio'
 import { FeedFiltersProvider, useFeedFilters } from '@/contexts/FeedFilters'
 import useSWR from 'swr'
 import { URLWithPost } from '../api/urls/route'
+import { cleanDomain } from '@/lib/utils'
 
 interface PostWithURLs {
   id: number
@@ -166,23 +166,21 @@ function SavedPageContent() {
 
   const sidebar = (
     <div className="space-y-4">
-      {/* TLDs Section */}
-      <div className="filter-card">
-        <div className="mb-4">
-          <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-            TLDs
-          </h3>
+      {/* Domain Filter */}
+      {domains.length > 0 && (
+        <section className="filter-card">
+          <h3 className="type-small">Domains</h3>
           <nav className="tld-list">
             {domains.slice(0, 10).map(({ domain, count }) => {
               const on = tlds.has(domain);
+              
               return (
-                <button
+                <button 
                   key={domain}
                   className={`tld-pill${!on ? ' off' : ''}`}
-                  style={{ padding: '0.25rem 0.75rem', marginBottom: '0.1rem' }}
                   onClick={() => toggleTld(domain)}
                 >
-                  {domain} <span className="meta-text">{count}</span>
+                  {cleanDomain(domain)} <span className="state-inactive">{count}</span>
                 </button>
               );
             })}
@@ -191,57 +189,56 @@ function SavedPageContent() {
               <div className="pt-1">
                 <button 
                   onClick={clearAllFilters}
-                  className="w-full text-left meta-text hover:underline px-3 py-1"
+                  className="w-full text-left type-small state-inactive hover:underline px-3 py-1"
                 >
                   clear all
                 </button>
               </div>
             )}
           </nav>
-        </div>
+        </section>
+      )}
 
-        {/* Editors Section */}
-        <div className="mb-4">
-          <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-            Editors
-          </h3>
-          <nav className="editors-list">
-            {uniqueUsers.map((user) => (
-              <a
-                key={user.id}
-                href={`/${user.username}`}
-                className="editor-pill"
-                style={{ 
-                  padding: '0.25rem 0.75rem', 
-                  marginBottom: '0.1rem',
-                  fontSize: '14px',
-                  '--user-color1': user.color1,
-                  '--user-color2': user.color2
-                } as React.CSSProperties}
-              >
-                @{user.username}
-              </a>
-            ))}
-          </nav>
-        </div>
 
-        {/* Meta Section */}
-        <div>
-          <h3 className="text-sm font-medium mb-2" style={{ fontFamily: 'Inconsolata, monospace' }}>
-            Meta
-          </h3>
-          <nav className="meta-list">
-            <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {savedURLs.length} saved URLs
-            </div>
-            <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {Object.keys(domainCounts).length} domains
-            </div>
-            <div className="text-sm meta-text" style={{ padding: '0.25rem 0.75rem', fontSize: '12px' }}>
-              {groupedPosts.length} posts
-            </div>
-          </nav>
-        </div>
+
+      {/* Editors Section */}
+      <div className="mb-4">
+        <h3 className="type-small">
+          Editors
+        </h3>
+        <nav className="editors-list">
+          {uniqueUsers.map((user) => (
+            <a
+              key={user.id}
+              href={`/${user.username}`}
+              className="user-link type-small"
+              style={{ 
+                '--user-color1': user.color1,
+                '--user-color2': user.color2
+              } as React.CSSProperties}
+            >
+              @{user.username}
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      {/* Meta Section */}
+      <div>
+        <h3 className="type-small">
+          Stats
+        </h3>
+        <nav className="meta-list">
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {savedURLs.length} saved URLs
+          </div>
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {Object.keys(domainCounts).length} domains
+          </div>
+          <div className="type-small state-inactive" style={{ padding: '0.25rem 0.75rem' }}>
+            {groupedPosts.length} posts
+          </div>
+        </nav>
       </div>
     </div>
   )
@@ -256,18 +253,9 @@ function SavedPageContent() {
         }}
         onPostAdded={handlePostAdded}
       />
-      <OverlayNav />
-      <div 
-        style={{ 
-          paddingTop: '120px',
-          backgroundColor: colors.pageBg,
-          color: colors.pageFont,
-          minHeight: '100vh'
-        }}
-      >
-        <PageLayout
-          sidebar={sidebar}
-        >
+      <PageLayout
+        sidebar={sidebar}
+        metaHeader={
           <UserBio
             title="Saved URLs"
             username="saved"
@@ -279,19 +267,20 @@ function SavedPageContent() {
             }}
             showEditLink={false}
           />
-          {filteredPosts.length > 0 ? (
-            filteredPosts.map((groupedPost) => (
-              <PostCard
-                key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
-                data={groupedPost}
-                isFront={true}
-              />
-            ))
-          ) : (
-            <div>No saved URLs {tlds.size > 0 ? 'matching filters' : 'yet'}</div>
-          )}
-        </PageLayout>
-      </div>
+        }
+      >
+        {filteredPosts.length > 0 ? (
+          filteredPosts.map((groupedPost) => (
+            <PostCard
+              key={`${groupedPost.canonicalOwner.username}-${groupedPost.title}`}
+              data={groupedPost}
+              isFront={true}
+            />
+          ))
+        ) : (
+          <div>No saved URLs {tlds.size > 0 ? 'matching filters' : 'yet'}</div>
+        )}
+      </PageLayout>
     </>
   )
 }

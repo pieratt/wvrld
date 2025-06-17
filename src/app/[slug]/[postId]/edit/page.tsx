@@ -111,7 +111,7 @@ export default function PostEditPage({ params }: PostEditPageProps) {
             ← back to post
           </Link>
           
-          <div className="meta-text">
+          <div className="type-small state-inactive">
             <div>Post #{post.id}</div>
             <div>Edit Mode</div>
           </div>
@@ -131,7 +131,7 @@ https://example.com
 https://github.com/user/repo"
               className="w-full p-2 border border-gray-300 h-64"
             />
-            <p className="meta-text">First line = title (optional), following lines = URLs</p>
+            <p className="type-small state-inactive">First line = title (optional), following lines = URLs</p>
           </div>
           
           <div className="flex gap-2">

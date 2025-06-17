@@ -1,60 +1,51 @@
 'use client';
 
 import { useFeedFilters } from '@/contexts/FeedFilters';
-import { URLWithPost } from '@/app/api/urls/route';
+import { cleanDomain } from '@/lib/utils';
 
 interface UserDomainFilterBarProps {
-  urls: URLWithPost[] | undefined;
+  domains: { domain: string; count: number }[];
 }
 
-export function UserDomainFilterBar({ urls }: UserDomainFilterBarProps) {
+export function UserDomainFilterBar({ domains }: UserDomainFilterBarProps) {
   const { tlds, toggleTld } = useFeedFilters();
-  
-  // Calculate domain counts from user's data
-  const domainCounts = urls?.reduce((acc, url) => {
-    if (url.domain) {
-      acc[url.domain] = (acc[url.domain] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>) || {};
-
-  const domains = Object.entries(domainCounts)
-    .map(([domain, count]) => ({ domain, count }))
-    .sort((a, b) => b.count - a.count);
 
   const clearAllFilters = () => {
     Array.from(tlds).forEach(domain => toggleTld(domain));
   };
 
-  if (!urls || domains.length === 0) return null;
-
   return (
-    <div className="filter-card">
-      <nav className="tld-list">
-        {domains.slice(0, 10).map(({ domain, count }) => {
-          const on = tlds.has(domain);
-          return (
-            <button
-              key={domain}
-              className={`tld-pill${!on ? ' off' : ''}`}
-              onClick={() => toggleTld(domain)}
-            >
-              {domain} <span className="meta-text">({count})</span>
-            </button>
-          );
-        })}
-        
-        {tlds.size > 0 && (
-          <div className="pt-2">
-            <button 
-              onClick={clearAllFilters}
-              className="w-full text-left meta-text hover:underline px-3 py-1"
-            >
-              clear all
-            </button>
-          </div>
-        )}
-      </nav>
+    <div className="space-y-4">
+      {/* Domains */}
+      <div className="mb-4">
+        <h3 className="type-small">Domains</h3>
+        <nav className="tld-list">
+          {domains.slice(0, 10).map(({ domain, count }) => {
+            const on = tlds.has(domain);
+            
+            return (
+              <button 
+                key={domain}
+                className={`tld-pill${!on ? ' off' : ''}`}
+                onClick={() => toggleTld(domain)}
+              >
+                {cleanDomain(domain)} <span className="state-inactive">({count})</span>
+              </button>
+            );
+          })}
+          
+          {tlds.size > 0 && (
+            <div className="pt-1">
+              <button 
+                onClick={clearAllFilters}
+                className="w-full text-left type-small state-inactive hover:underline px-3 py-1"
+              >
+                clear all
+              </button>
+            </div>
+          )}
+        </nav>
+      </div>
     </div>
   );
 } 

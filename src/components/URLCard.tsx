@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useSavedURLsContext } from '@/contexts/SavedURLsContext'
 import { useState } from 'react'
+import { cleanDomain, getDisplayTitle } from '@/lib/utils'
 
 interface URLData {
   id: number
@@ -157,12 +158,12 @@ export default function URLCard({ url, owner, post, showOwner = true }: URLCardP
           {/* Content */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 line-clamp-1 text-base leading-tight mb-1">
-              {url.title || url.url}
+              {getDisplayTitle(url.title, url.url, url.domain)}
             </h3>
             
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
               <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-xs">
-                {url.domain || new URL(url.url).hostname}
+                {cleanDomain(url.domain) || cleanDomain(new URL(url.url).hostname)}
               </span>
               {showOwner && (
                 <>

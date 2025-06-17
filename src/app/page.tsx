@@ -3,7 +3,6 @@
 import MasonryGrid, { MasonryItem } from '@/components/MasonryGrid'
 import PostCard from '@/components/PostCard'
 import AddPostInput from '@/components/AddPostInput'
-import OverlayNav from '@/components/OverlayNav'
 import { useGroupedPosts } from '@/hooks/useGroupedPosts'
 import { useFilteredGroupedPosts } from '@/hooks/useFilteredGroupedPosts'
 import useSWR from 'swr'
@@ -69,18 +68,9 @@ function Feed() {
         }}
         onPostAdded={handlePostAdded}
       />
-      <OverlayNav />
-      <div 
-        style={{ 
-          paddingTop: '120px',
-          backgroundColor: colors.pageBg,
-          color: colors.pageFont,
-          minHeight: '100vh'
-        }}
-      >
-        <PageLayout 
-          sidebar={<UnifiedSidebar />}
-        >
+      <PageLayout 
+        sidebar={<UnifiedSidebar />}
+        metaHeader={
           <UserBio
             title={systemUser.title}
             username={systemUser.username}
@@ -94,15 +84,16 @@ function Feed() {
             }}
             showEditLink={false}
           />
-          {filteredPosts.map((group) => (
-            <PostCard
-              key={`${group.canonicalOwner.username}-${group.title}`}
-              data={group}
-              isFront={true}
-            />
-          ))}
-        </PageLayout>
-      </div>
+        }
+      >
+        {filteredPosts.map((group) => (
+          <PostCard
+            key={`${group.canonicalOwner.username}-${group.title}`}
+            data={group}
+            isFront={true}
+          />
+        ))}
+      </PageLayout>
     </>
   )
 }
